@@ -8,24 +8,44 @@ use Illuminate\Support\Facades\Auth;
 
 class CourseContentController extends Controller
 {
-    // Course
+    // Menampilkan dashboard guru dengan daftar kursusnya
+    public function index()
+    {
+        $courses = Course::where('teacher_id', Auth::id())->get();
+        return view('teacher.dashboard', compact('courses'));
+    }
+
+    // Menyimpan Kursus (Hybrid)
     public function storeCourse(Request $request) {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'nullable|string'
         ]);
         $validated['teacher_id'] = Auth::id();
-        return response()->json(Course::create($validated), 201);
+        $course = Course::create($validated);
+
+        if ($request->expectsJson()) {
+            return response()->json($course, 201);
+        }
+
+        return redirect()->back()->with('success', 'Kursus berhasil dibuat!');
     }
 
-    // Module
+    // Menambah Modul (Hybrid)
     public function addModule(Request $request, $courseId) {
         $validated = $request->validate(['title' => 'required', 'order' => 'integer']);
         $validated['course_id'] = $courseId;
-        return response()->json(Module::create($validated), 201);
+        
+        $module = Module::create($validated);
+
+        if ($request->expectsJson()) {
+            return response()->json($module, 201);
+        }
+
+        return redirect()->back();
     }
 
-    // Material
+    // Menambah Materi (Hybrid)
     public function addMaterial(Request $request, $moduleId) {
         $validated = $request->validate([
             'title' => 'required',
@@ -34,6 +54,12 @@ class CourseContentController extends Controller
             'file_path' => 'nullable'
         ]);
         $validated['module_id'] = $moduleId;
-        return response()->json(Material::create($validated), 201);
+        $material = Material::create($validated);
+
+        if ($request->expectsJson()) {
+            return response()->json($material, 201);
+        }
+
+        return redirect()->back();
     }
 }

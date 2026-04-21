@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\{CourseContentController, AcademicController};
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -30,17 +31,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Wilayah GURU (Teacher)
     Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
-        Route::get('/dashboard', function () {
-            return view('teacher.dashboard');
-        })->name('dashboard');
+        Route::get('/dashboard', [CourseContentController::class, 'index'])->name('dashboard');
+        Route::post('/courses', [CourseContentController::class, 'storeCourse'])->name('courses.store');
     });
 
     // Wilayah SISWA (Student)
     Route::middleware(['role:student'])->prefix('student')->name('student.')->group(function () {
         Route::get('/dashboard', function () {
-            return view('student.dashboard');
+            $availableCourses = \App\Models\Course::all();
+            return view('student.dashboard', compact('availableCourses'));
         })->name('dashboard');
     });
+
+    // Enroll (Digunakan di Dashboard Siswa)
+    Route::post('/enroll', [AcademicController::class, 'enroll'])->name('enroll');
+
 });
 
 require __DIR__.'/auth.php';
