@@ -15,15 +15,18 @@ class RoleMiddleware
      */
     public function handle(Request $request, Closure $next, string $role): Response
     {
-        // 1. Cek apakah user udah login
+        // 1. Cek apakah user sudah login
         if (!auth()->check()) {
-            return redirect()->route('login');
+            return $request->expectsJson()
+                ? response()->json(['message' => 'Unauthenticated.'], 401)
+                : redirect()->route('login');
         }
 
-        // 2. Apakah role user sesuai dengan yang diminta di route
+        // 2. Cek apakah role user sesuai
         if (auth()->user()->role !== $role) {
-            // Jika tidak sesuai, lempar error 403 (Forbidden)
-            abort(403,'You do not have the permission to access this resource.');
+            return $request->expectsJson()
+                ? response()->json(['message' => 'Forbidden: You do not have ' . $role . ' access.'], 403)
+                : abort(403, 'You do not have the permission to access this resource.');
         }
         return $next($request);
     }

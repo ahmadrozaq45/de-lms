@@ -7,16 +7,16 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Logic Redirect Dashboard Utama
+// Redirect Dashboard Utama berdasarkan Role
 Route::get('/dashboard', function () {
     $role = auth()->user()->role;
+    // Memastikan redirect ke route name yang tepat: admin.dashboard, teacher.dashboard, atau student.dashboard
     return redirect()->route($role . '.dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
-// Grouping Berdasarkan Role
 Route::middleware(['auth', 'verified'])->group(function () {
     
-    // Rute Profile (Harus ada agar navigasi tidak error)
+    // Rute Profile (Bawaan Breeze)
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
@@ -28,14 +28,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
         })->name('dashboard');
     });
 
-    // Wilayah GURU
+    // Wilayah GURU (Teacher)
     Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
         Route::get('/dashboard', function () {
             return view('teacher.dashboard');
         })->name('dashboard');
     });
 
-    // Wilayah SISWA
+    // Wilayah SISWA (Student)
     Route::middleware(['role:student'])->prefix('student')->name('student.')->group(function () {
         Route::get('/dashboard', function () {
             return view('student.dashboard');
@@ -43,5 +43,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 });
 
-// WAJIB: Memanggil rute login, register, dll dari Breeze
 require __DIR__.'/auth.php';
