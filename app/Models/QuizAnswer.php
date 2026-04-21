@@ -6,5 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class QuizAnswer extends Model
 {
-    //
+    protected $fillable = ['quiz_attempt_id', 'question_id', 'answer_text', 'is_correct'];
+    protected $casts = ['is_correct' => 'boolean'];
 }

@@ -6,5 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 
 class MaterialProgress extends Model
 {
-    //
+    protected $fillable = ['user_id', 'material_id', 'is_completed'];
+    protected $casts = ['is_completed' => 'boolean'];
 }
