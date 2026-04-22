@@ -15,6 +15,15 @@
                     <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')">
                         {{ __('Dashboard') }}
                     </x-nav-link>
+
+                    <!-- Teacher Segment -->
+                    @if(Auth::user()->role === 'teacher')
+                        <x-nav-link :href="route('teacher.courses.index')" :active="request()->routeIs('teacher.courses.*')">
+                            {{ __('My Courses') }}
+                        </x-nav-link>
+
+                        
+                    @endif
                 </div>
             </div>
 

@@ -25,28 +25,24 @@ Route::middleware(['auth', 'verified'])->group(function () {
     });
 
     // GURU
-    Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
+Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
 
-        // Dashboard
-        Route::get('/dashboard', [CourseContentController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [CourseContentController::class, 'dashboard'])->name('dashboard');
 
-        // Kursus
-        Route::get('/courses',         [CourseContentController::class, 'manageCourses'])->name('courses.index');
-        Route::post('/courses',        [CourseContentController::class, 'storeCourse'])->name('courses.store');
-        Route::get('/courses/{id}',    [CourseContentController::class, 'show'])->name('courses.show');
+    // Batasi hanya method yang sudah ada di controller
+    Route::resource('courses', CourseContentController::class)
+         ->only(['index', 'create', 'store', 'show','edit','update','destroy']);
 
-        // Modul (di dalam kursus)
-        Route::post('/courses/{courseId}/modules', [CourseContentController::class, 'addModule'])
-             ->name('courses.modules.store');
+    // Modul & Materi
+    Route::post('/courses/{courseId}/modules', [CourseContentController::class, 'addModule'])
+         ->name('courses.modules.store');
+    Route::post('/modules/{moduleId}/materials', [CourseContentController::class, 'addMaterial'])
+         ->name('modules.materials.store');
 
-        // Materi (di dalam modul)
-        Route::post('/modules/{moduleId}/materials', [CourseContentController::class, 'addMaterial'])
-             ->name('modules.materials.store');
-
-        // Review Submissions
-        Route::get('/reviews',          [AcademicController::class, 'reviewIndex'])->name('reviews.index');
-        Route::patch('/reviews/{id}',   [AcademicController::class, 'reviewUpdate'])->name('reviews.update');
-    });
+    // Review
+    Route::get('/reviews',        [AcademicController::class, 'reviewIndex'])->name('reviews.index');
+    Route::patch('/reviews/{id}', [AcademicController::class, 'reviewUpdate'])->name('reviews.update');
+});
 
     // SISWA
     Route::middleware(['role:student'])->prefix('student')->name('student.')->group(function () {

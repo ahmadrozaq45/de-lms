@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 class CourseContentController extends Controller
 {
     // Dashboard guru — statistik + pending review + daftar kursus
-    public function index()
+    public function dashboard()
     {
         $courses = Course::with('modules')->where('teacher_id', Auth::id())->get();
 
@@ -35,8 +35,19 @@ class CourseContentController extends Controller
         ));
     }
 
+    public function index()
+    {
+        $courses = Course::with('modules')->where('teacher_id', Auth::id())->latest()->get();
+        return view('teacher.courses.index', compact('courses'));
+    }
+
+    public function create()
+    {
+        return view('teacher.courses.create');
+    }
+
     // Menyimpan Kursus (Hybrid)
-    public function storeCourse(Request $request)
+    public function store(Request $request)
     {
         $validated = $request->validate([
             'title'       => 'required|string|max:255',
@@ -49,7 +60,7 @@ class CourseContentController extends Controller
             return response()->json($course, 201);
         }
 
-        return redirect()->back()->with('success', 'Kursus berhasil dibuat!');
+        return redirect()->route('teacher.courses.show', $course->id)->with('success', 'Kursus berhasil dibuat!');
     }
 
     // Daftar kursus guru
@@ -100,5 +111,28 @@ class CourseContentController extends Controller
         }
 
         return redirect()->back()->with('success', 'Materi berhasil ditambahkan!');
+    }
+
+    public function edit($id)
+    {
+        $course = Course::where('teacher_id', Auth::id())->findOrFail($id);
+        return view('teacher.courses.edit', compact('course'));
+    }
+
+    public function update(Request $request, $id)
+    {
+        $course = Course::where('teacher_id', Auth::id())->findOrFail($id);
+        $course->update($request->validate([
+            'title'       => 'required|string|max:255',
+            'description' => 'nullable|string'
+        ]));
+        return redirect()->route('teacher.courses.index')->with('success', 'Kursus berhasil diperbarui!');
+    }
+
+    public function destroy($id)
+    {
+        $course = Course::where('teacher_id', Auth::id())->findOrFail($id);
+        $course->delete();
+        return redirect()->route('teacher.courses.index')->with('success', 'Kursus berhasil dihapus!');
     }
 }
