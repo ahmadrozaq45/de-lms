@@ -59,4 +59,4 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('/enroll', [AcademicController::class, 'enroll'])->name('enroll');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__.'/auth.php';    
