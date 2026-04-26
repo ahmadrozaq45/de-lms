@@ -37,19 +37,21 @@ class AcademicController extends Controller
      */
     public function reviewIndex(Request $request)
     {
-        $submissions = Submission::whereHas('assignment.module.course', function ($q) {
+        // Assignment langsung punya course_id (bukan via module),
+        // jadi chain-nya cukup: assignment.course
+        $submissions = Submission::whereHas('assignment.course', function ($q) {
             $q->where('teacher_id', Auth::id());
         })->with('student')->latest()->get();
-
+ 
         $selected = null;
         if ($request->has('submission')) {
             $selected = Submission::with('student')
-                ->whereHas('assignment.module.course', function ($q) {
+                ->whereHas('assignment.course', function ($q) {
                     $q->where('teacher_id', Auth::id());
                 })
                 ->findOrFail($request->submission);
         }
-
+ 
         return view('teacher.reviews.index', compact('submissions', 'selected'));
     }
 

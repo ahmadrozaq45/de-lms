@@ -9,7 +9,18 @@ class QuizAttempt extends Model
 {
     protected $fillable = ['quiz_id', 'user_id', 'score'];
 
-    public function answers(): HasMany {
+    public function quiz(): BelongsTo
+    {
+        return $this->belongsTo(Quiz::class);
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function answers(): HasMany 
+    {
         return $this->hasMany(QuizAnswer::class);
     }
 }

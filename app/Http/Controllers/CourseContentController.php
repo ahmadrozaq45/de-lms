@@ -63,6 +63,15 @@ class CourseContentController extends Controller
         return redirect()->route('teacher.courses.show', $course->id)->with('success', 'Kursus berhasil dibuat!');
     }
 
+    /**
+     * Alias untuk API route: POST /api/courses
+     * Route API memanggil 'storeCourse', web memanggil 'store'.
+     */
+    public function storeCourse(Request $request)
+    {
+        return $this->store($request);
+    }
+    
     // Daftar kursus guru
     public function manageCourses()
     {
