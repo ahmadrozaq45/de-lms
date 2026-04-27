@@ -12,7 +12,14 @@ use Illuminate\Support\Facades\Auth;
 class AcademicController extends Controller
 {
     public function enroll(Request $request) {
-        return response()->json(CourseEnrollment::firstOrCreate(['user_id' => Auth::id(), 'course_id' => $request->course_id]));
+        // Proses pendaftaran kelas
+        CourseEnrollment::firstOrCreate([
+            'user_id' => Auth::id(), 
+            'course_id' => $request->course_id
+        ]);
+
+        // Kembalikan siswa ke halaman detail kelas dengan pesan sukses
+        return redirect()->back()->with('success', 'Selamat! Anda berhasil mendaftar ke kelas ini.');
     }
 
     public function storeAssignment(Request $request) {
