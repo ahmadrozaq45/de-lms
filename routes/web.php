@@ -1,9 +1,11 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\CourseContentController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\CourseController;
+use App\Http\Controllers\ModuleController;
+use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\ReviewController;
-use App\Http\Controllers\StudentController;
 use App\Http\Controllers\EnrollmentController;
 use Illuminate\Support\Facades\Route;
 
@@ -11,17 +13,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Redirect /dashboard ke dashboard sesuai role masing-masing user
-Route::get('/dashboard', function () {
-    $role = auth()->user()->role;
-
-    $validRoles = ['admin', 'teacher', 'student'];
-    if (!in_array($role, $validRoles)) {
-        abort(403, 'Role tidak dikenali.');
-    }
-
-    return redirect()->route($role . '.dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
@@ -32,25 +26,22 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // ── ADMIN ────────────────────────────────────────────────────────────────
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
-        Route::get('/dashboard', fn() => view('admin.dashboard'))->name('dashboard');
+        Route::get('/dashboard', [DashboardController::class, 'admin'])->name('dashboard');
     });
 
     // ── GURU ─────────────────────────────────────────────────────────────────
     Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
 
-        Route::get('/dashboard', [CourseContentController::class, 'dashboard'])->name('dashboard');
+        Route::get('/dashboard', [DashboardController::class, 'teacher'])->name('dashboard');
 
-        // CRUD kursus via resource route
-        Route::resource('courses', CourseContentController::class)
+        Route::resource('courses', CourseController::class)
              ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
 
-        // Modul & Materi
-        Route::post('/courses/{courseId}/modules', [CourseContentController::class, 'addModule'])
+        Route::post('/courses/{courseId}/modules', [ModuleController::class, 'store'])
              ->name('courses.modules.store');
-        Route::post('/modules/{moduleId}/materials', [CourseContentController::class, 'addMaterial'])
+        Route::post('/modules/{moduleId}/materials', [MaterialController::class, 'store'])
              ->name('modules.materials.store');
 
-        // Review submission siswa
         Route::get('/reviews', [ReviewController::class, 'index'])->name('reviews.index');
         Route::patch('/reviews/{id}', [ReviewController::class, 'update'])->name('reviews.update');
     });
@@ -58,13 +49,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ── SISWA ─────────────────────────────────────────────────────────────────
     Route::middleware(['role:student'])->prefix('student')->name('student.')->group(function () {
 
-        Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
+        Route::get('/dashboard', [DashboardController::class, 'student'])->name('dashboard');
 
-        // Enroll ke kelas
         Route::post('/enroll', [EnrollmentController::class, 'store'])->name('enroll');
 
-        // Detail kursus
-        Route::get('/courses/{courseId}', [StudentController::class, 'showCourse'])->name('courses.show');
+        Route::get('/courses/{id}', [CourseController::class, 'show'])->name('courses.show');
     });
 });
 

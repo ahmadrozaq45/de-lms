@@ -3,7 +3,9 @@
 use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\CourseContentController;
+use App\Http\Controllers\CourseController;
+use App\Http\Controllers\ModuleController;
+use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\GradeController;
@@ -12,37 +14,25 @@ use App\Http\Controllers\ForumController;
 use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\AiAnalysisController;
 
-/*
-|--------------------------------------------------------------------------
-| API Routes
-|--------------------------------------------------------------------------
-*/
-
 Route::middleware('auth:sanctum')->group(function () {
 
-    // --- 1. USER & PROFILE (semua role) ---
+    // --- 1. USER & PROFILE ---
     Route::prefix('user')->group(function () {
         Route::get('/', [UserController::class, 'show']);
         Route::put('/', [UserController::class, 'update']);
     });
 
-    // --- 2. COURSE & CONTENT (hanya teacher) ---
+    // --- 2. COURSE, MODULE, MATERIAL (hanya teacher) ---
     Route::middleware('role:teacher')->group(function () {
-        Route::prefix('courses')->group(function () {
-            Route::post('/', [CourseContentController::class, 'store']);
-            Route::post('/{courseId}/modules', [CourseContentController::class, 'addModule']);
-        });
-        Route::post('/modules/{moduleId}/materials', [CourseContentController::class, 'addMaterial']);
+        Route::post('/courses', [CourseController::class, 'store']);
+        Route::post('/courses/{courseId}/modules', [ModuleController::class, 'store']);
+        Route::post('/modules/{moduleId}/materials', [MaterialController::class, 'store']);
 
-        // Assignment & penilaian dibuat oleh teacher
         Route::post('/assignments', [AssignmentController::class, 'store']);
         Route::post('/grades', [GradeController::class, 'store']);
 
-        // Quiz dibuat oleh teacher
-        Route::prefix('quizzes')->group(function () {
-            Route::post('/', [QuizController::class, 'storeQuiz']);
-            Route::post('/{id}/questions', [QuizController::class, 'addQuestion']);
-        });
+        Route::post('/quizzes', [QuizController::class, 'storeQuiz']);
+        Route::post('/quizzes/{id}/questions', [QuizController::class, 'addQuestion']);
     });
 
     // --- 3. STUDENT ONLY ---
@@ -50,19 +40,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/enroll', [EnrollmentController::class, 'store']);
         Route::post('/assignments/{id}/submit', [AssignmentController::class, 'submit']);
 
-        Route::prefix('quizzes')->group(function () {
-            Route::post('/{id}/attempt', [QuizController::class, 'startAttempt']);
-            Route::post('/save-answer', [QuizController::class, 'saveAnswer']);
-        });
+        Route::post('/quizzes/{id}/attempt', [QuizController::class, 'startAttempt']);
+        Route::post('/quizzes/save-answer', [QuizController::class, 'saveAnswer']);
     });
 
     // --- 4. FORUM (semua role) ---
-    Route::prefix('discussions')->group(function () {
-        Route::post('/', [ForumController::class, 'storeThread']);
-        Route::post('/{id}/reply', [ForumController::class, 'reply']);
-    });
+    Route::post('/discussions', [ForumController::class, 'storeThread']);
+    Route::post('/discussions/{id}/reply', [ForumController::class, 'reply']);
 
-    // --- 5. TRACKING & PROGRESS (semua role) ---
+    // --- 5. TRACKING (semua role) ---
     Route::prefix('tracking')->group(function () {
         Route::get('/my-logs', [TrackingController::class, 'getActivityLogs']);
         Route::post('/log', [TrackingController::class, 'logActivity']);
