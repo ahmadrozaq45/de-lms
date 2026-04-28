@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\{CourseContentController, AcademicController};
+use App\Http\Controllers\CourseContentController;
+use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\EnrollmentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -13,7 +15,6 @@ Route::get('/', function () {
 Route::get('/dashboard', function () {
     $role = auth()->user()->role;
 
-    // Jaga-jaga jika role tidak dikenali, arahkan ke halaman utama
     $validRoles = ['admin', 'teacher', 'student'];
     if (!in_array($role, $validRoles)) {
         abort(403, 'Role tidak dikenali.');
@@ -29,16 +30,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // ADMIN
+    // ── ADMIN ────────────────────────────────────────────────────────────────
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', fn() => view('admin.dashboard'))->name('dashboard');
     });
 
-    // GURU
+    // ── GURU ─────────────────────────────────────────────────────────────────
     Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
 
         Route::get('/dashboard', [CourseContentController::class, 'dashboard'])->name('dashboard');
 
+        // CRUD kursus via resource route
         Route::resource('courses', CourseContentController::class)
              ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
 
@@ -49,20 +51,19 @@ Route::middleware(['auth', 'verified'])->group(function () {
              ->name('modules.materials.store');
 
         // Review submission siswa
-        Route::get('/reviews', [AcademicController::class, 'reviewIndex'])->name('reviews.index');
-        Route::patch('/reviews/{id}', [AcademicController::class, 'reviewUpdate'])->name('reviews.update');
+        Route::get('/reviews', [ReviewController::class, 'index'])->name('reviews.index');
+        Route::patch('/reviews/{id}', [ReviewController::class, 'update'])->name('reviews.update');
     });
 
-    // SISWA
+    // ── SISWA ─────────────────────────────────────────────────────────────────
     Route::middleware(['role:student'])->prefix('student')->name('student.')->group(function () {
-        
-        // Pemanggilan Controller
+
         Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
 
-        // Enroll masuk ke sini karena hanya boleh dilakukan siswa
-        Route::post('/enroll', [AcademicController::class, 'enroll'])->name('enroll');
-        
-        // Rute untuk melihat detail kelas/materi (persiapan)
+        // Enroll ke kelas
+        Route::post('/enroll', [EnrollmentController::class, 'store'])->name('enroll');
+
+        // Detail kursus
         Route::get('/courses/{courseId}', [StudentController::class, 'showCourse'])->name('courses.show');
     });
 });
