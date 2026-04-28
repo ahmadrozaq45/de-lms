@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\{CourseContentController, AcademicController};
+use App\Http\Controllers\StudentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -54,13 +55,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // SISWA
     Route::middleware(['role:student'])->prefix('student')->name('student.')->group(function () {
-        Route::get('/dashboard', function () {
-            $availableCourses = \App\Models\Course::all();
-            return view('student.dashboard', compact('availableCourses'));
-        })->name('dashboard');
+        
+        // Pemanggilan Controller
+        Route::get('/dashboard', [StudentController::class, 'dashboard'])->name('dashboard');
 
         // Enroll masuk ke sini karena hanya boleh dilakukan siswa
         Route::post('/enroll', [AcademicController::class, 'enroll'])->name('enroll');
+        
+        // Rute untuk melihat detail kelas/materi (persiapan)
+        Route::get('/courses/{courseId}', [StudentController::class, 'showCourse'])->name('courses.show');
     });
 });
 
