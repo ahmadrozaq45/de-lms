@@ -54,6 +54,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::post('/enroll', [EnrollmentController::class, 'store'])->name('enroll');
 
         Route::get('/courses/{id}', [CourseController::class, 'show'])->name('courses.show');
+
+        Route::get('/materials/{id}', [MaterialController::class, 'show'])->name('materials.read');
     });
 });
 

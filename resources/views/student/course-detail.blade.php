@@ -56,7 +56,7 @@
                             @forelse ($module->materials as $material)
                                 <li>
                                     @if($isEnrolled)
-                                        <a href="#" class="text-blue-600 hover:underline font-medium">
+                                        <a href="{{ route('student.materials.read', $material->id) }}" class="text-blue-600 hover:underline font-medium">
                                             {{ $material->title ?? 'Materi Belajar' }}
                                         </a>
                                     @else
