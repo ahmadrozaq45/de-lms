@@ -12,7 +12,7 @@
         <p style="font-size:14px; color:#6b7280; margin:0;">Kelola course dan review hasil siswa</p>
     </div>
 
-    <!-- Stats -->
+   <!-- 
     <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px;">
         <div class="stat-card">
             <div class="stat-icon" style="background:#eff6ff;">
@@ -35,14 +35,7 @@
             <div style="font-size:28px; font-weight:700; color:#111827; line-height:1;">{{ $totalAssignments }}</div>
             <div style="font-size:13px; color:#6b7280; margin-top:4px;">Assignment</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon" style="background:#fff7ed;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#f97316" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-            </div>
-            <div style="font-size:28px; font-weight:700; color:#111827; line-height:1;">{{ $pendingReviews }}</div>
-            <div style="font-size:13px; color:#6b7280; margin-top:4px;">Pending Review</div>
-        </div>
-    </div>
+    </div> -->
 
     <!-- Pending Reviews -->
     @if($pendingSubmissions->isNotEmpty())
