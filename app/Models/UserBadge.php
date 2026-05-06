@@ -6,5 +6,5 @@ use Illuminate\Database\Eloquent\Model;
 
 class UserBadge extends Model
 {
-    //
+    protected $fillable = ['badge_id', 'earned_at'];
 }
