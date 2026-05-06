@@ -8,7 +8,6 @@
     <div class="py-12 bg-gray-50 min-h-screen">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
-            <!-- Form Tambah Modul -->
             <div class="bg-white overflow-hidden shadow-sm rounded-xl mb-6 border border-gray-100">
                 <div class="p-6">
                     <h3 class="text-lg font-bold mb-4 text-gray-800">Tambah Modul Baru</h3>
@@ -22,10 +21,8 @@
                 </div>
             </div>
 
-            <!-- Daftar Modul & Materi -->
             @foreach($course->modules as $module)
             <div class="bg-white overflow-hidden shadow-sm rounded-xl mb-6 border border-gray-100">
-                <!-- Header Modul (Style Accordion/Header seperti contoh) -->
                 <div class="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
                     <div class="flex items-center gap-3">
                         <div class="bg-white p-2 rounded-full shadow-sm border border-gray-200">
@@ -39,7 +36,6 @@
                 </div>
                 
                 <div class="p-6">
-                    <!-- Preview Konten Modul (Agar teks tidak tersembunyi) -->
                     @if($module->description)
                         <div class="mb-6 text-gray-600 leading-relaxed prose max-w-none">
                             {!! $module->description !!}
@@ -50,17 +46,12 @@
                         <p class="text-sm font-medium text-gray-500">Pelajari materi berikut ini:</p>
                         
                         @forelse($module->materials as $material)
-                            <!-- Baris Materi (Style seperti contoh gambar) -->
                             <div class="flex items-center gap-4 p-2 group transition-all">
-                                <!-- Ikon Tipe -->
                                 <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg shadow-sm
-                                    @if($material->type == 'pdf') bg-purple-50 text-purple-600 
-                                    @elseif($material->type == 'video') bg-orange-50 text-orange-600 
+                                    @if($material->type == 'file') bg-purple-50 text-purple-600 
                                     @else bg-blue-50 text-blue-600 @endif">
                                     
-                                    @if($material->type == 'video')
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132z"></path></svg>
-                                    @elseif($material->type == 'pdf')
+                                    @if($material->type == 'file')
                                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                                     @else
                                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
@@ -73,7 +64,6 @@
                                         <span class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{{ $material->type }}</span>
                                     </div>
                                     
-                                    <!-- Menampilkan Konten Teks di bawah judul agar TIDAK TERHIDE -->
                                     @if($material->type == 'text' && $material->content)
                                         <div class="mt-2 text-sm text-gray-600 prose-sm prose-blue max-w-none border-l-4 border-blue-100 pl-4 bg-blue-50/30 py-2 rounded-r-lg">
                                             {!! $material->content !!}
@@ -88,7 +78,6 @@
                 </div>
             </div>
 
-            <!-- Modal Tambah Materi (CKEditor terintegrasi) -->
             <div id="modal-material-{{ $module->id }}" class="fixed inset-0 z-50 hidden overflow-y-auto">
                 <div class="flex items-center justify-center min-h-screen p-4">
                     <div class="fixed inset-0 bg-gray-900 bg-opacity-60 transition-opacity" onclick="toggleModal('modal-material-{{ $module->id }}')"></div>
@@ -113,22 +102,19 @@
                                     <label class="block text-sm font-bold text-gray-700 mb-2">Tipe Materi</label>
                                     <select name="type" onchange="handleTypeChange(this, {{ $module->id }})" class="w-full border-gray-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 py-3">
                                         <option value="text">📝 Teks / Artikel</option>
-                                        <option value="video">🎥 Video (MP4)</option>
-                                        <option value="pdf">📄 Dokumen (PDF)</option>
+                                        <option value="file">📁 Upload File (Dokumen / Video)</option>
                                     </select>
                                 </div>
                                 
-                                <!-- Input Konten (CKEditor 5) -->
                                 <div id="content-section-{{ $module->id }}" class="mb-4">
                                     <label class="block text-sm font-bold text-gray-700 mb-2 uppercase">Isi Konten Materi</label>
                                     <textarea name="content" class="editor-container" data-module-id="{{ $module->id }}"></textarea>
                                 </div>
 
-                                <!-- Input File Upload -->
                                 <div id="file-section-{{ $module->id }}" class="mb-4 hidden bg-gray-50 p-6 rounded-xl border-2 border-dashed border-gray-300">
-                                    <label class="block text-sm font-bold text-gray-700 mb-2">Pilih File (Video/PDF)</label>
-                                    <input type="file" name="file_path" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                                    <p class="text-xs text-gray-400 mt-2 italic">Ukuran file maksimal: 20MB</p>
+                                    <label class="block text-sm font-bold text-gray-700 mb-2">Pilih File</label>
+                                    <input type="file" name="file_path" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mp4,.mkv" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                    <p class="text-xs text-gray-500 mt-2 italic">Format didukung: PDF, DOC/X, XLS/X, PPT/X, MP4, MKV. (Ukuran maksimal: 20MB)</p>
                                 </div>
                             </div>
 
@@ -145,7 +131,6 @@
         </div>
     </div>
 
-    <!-- CDN CKEditor 5 -->
     <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
 
     <script>
@@ -179,7 +164,7 @@
             if (select.value === 'text') {
                 contentSection.classList.remove('hidden');
                 fileSection.classList.add('hidden');
-            } else {
+            } else { // Jika valuenya 'file'
                 contentSection.classList.add('hidden');
                 fileSection.classList.remove('hidden');
             }
