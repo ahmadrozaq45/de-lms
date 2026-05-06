@@ -2,26 +2,39 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Course;
-use App\Models\CourseEnrollment;
-use Illuminate\Http\Request;
+use App\Models\{Course, CourseEnrollment};
+use App\Services\BadgeService;
+use Illuminate\Http\{Request, JsonResponse};
 use Illuminate\Support\Facades\Auth;
 
 class CourseController extends Controller
 {
+    public function __construct(private BadgeService $badgeService) {}
+
     /**
-     * Daftar kursus milik guru yang login.
-     * GET /teacher/courses
+     * Daftar kursus.
+     * - API: semua kursus (bisa difilter by teacher)
+     * - Web teacher: kursus milik guru yang login
      */
-    public function index()
+    public function index(Request $request)
     {
+        if ($request->expectsJson()) {
+            $query = Course::with('teacher:id,name')->withCount('enrollments');
+
+            if ($request->has('teacher_id')) {
+                $query->where('teacher_id', $request->teacher_id);
+            }
+
+            return response()->json($query->latest()->get());
+        }
+
+        // Web (guru)
         $courses = Course::with('modules')->where('teacher_id', Auth::id())->latest()->get();
         return view('teacher.courses.index', compact('courses'));
     }
 
     /**
-     * Form pembuatan kursus baru.
-     * GET /teacher/courses/create
+     * Form pembuatan kursus baru (web saja).
      */
     public function create()
     {
@@ -29,8 +42,8 @@ class CourseController extends Controller
     }
 
     /**
-     * Simpan kursus baru. Digunakan web & API.
-     * POST /teacher/courses  |  POST /api/courses
+     * Simpan kursus baru.
+     * POST /teacher/courses | POST /api/courses
      */
     public function store(Request $request)
     {
@@ -43,7 +56,7 @@ class CourseController extends Controller
         $course = Course::create($validated);
 
         if ($request->expectsJson()) {
-            return response()->json($course, 201);
+            return response()->json($course->load('teacher:id,name'), 201);
         }
 
         return redirect()->route('teacher.courses.show', $course->id)
@@ -52,33 +65,35 @@ class CourseController extends Controller
 
     /**
      * Detail kursus.
-     * - Guru: tampilkan modul & materi miliknya (GET /teacher/courses/{id})
-     * - Siswa: tampilkan modul, materi, dan status enroll (GET /student/courses/{id})
+     * GET /api/courses/{id}  |  GET /teacher/courses/{id}  |  GET /student/courses/{id}
      */
-    public function show(int $id)
+    public function show(Request $request, int $id)
     {
+        $course = Course::with(['modules.materials', 'teacher:id,name'])->findOrFail($id);
+
+        if ($request->expectsJson()) {
+            $course->loadCount('enrollments');
+            return response()->json($course);
+        }
+
         $user = Auth::user();
 
         if ($user->role === 'teacher') {
-            $course = Course::with(['modules.materials'])
-                ->where('teacher_id', $user->id)
-                ->findOrFail($id);
-
+            // Pastikan kursus milik guru ini
+            abort_if($course->teacher_id !== $user->id, 403);
             return view('teacher.courses.show', compact('course'));
         }
 
         // Student
-        $course     = Course::with('modules.materials')->findOrFail($id);
         $isEnrolled = CourseEnrollment::where('user_id', $user->id)
-                            ->where('course_id', $id)
-                            ->exists();
+            ->where('course_id', $id)
+            ->exists();
 
         return view('student.course-detail', compact('course', 'isEnrolled'));
     }
 
     /**
-     * Form edit kursus (guru).
-     * GET /teacher/courses/{id}/edit
+     * Form edit kursus (web, guru).
      */
     public function edit(int $id)
     {
@@ -87,29 +102,36 @@ class CourseController extends Controller
     }
 
     /**
-     * Update kursus (guru).
-     * PUT/PATCH /teacher/courses/{id}
+     * Update kursus.
      */
     public function update(Request $request, int $id)
     {
         $course = Course::where('teacher_id', Auth::id())->findOrFail($id);
+
         $course->update($request->validate([
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
         ]));
+
+        if ($request->expectsJson()) {
+            return response()->json($course);
+        }
 
         return redirect()->route('teacher.courses.index')
                          ->with('success', 'Kursus berhasil diperbarui!');
     }
 
     /**
-     * Hapus kursus (guru).
-     * DELETE /teacher/courses/{id}
+     * Hapus kursus.
      */
-    public function destroy(int $id)
+    public function destroy(Request $request, int $id)
     {
         $course = Course::where('teacher_id', Auth::id())->findOrFail($id);
         $course->delete();
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Kursus berhasil dihapus.']);
+        }
 
         return redirect()->route('teacher.courses.index')
                          ->with('success', 'Kursus berhasil dihapus!');

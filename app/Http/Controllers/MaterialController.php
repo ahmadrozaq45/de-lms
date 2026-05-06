@@ -6,6 +6,8 @@ use App\Models\Material;
 use App\Models\CourseEnrollment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
 
 class MaterialController extends Controller
 {
@@ -20,8 +22,14 @@ class MaterialController extends Controller
             'title'     => 'required|string|max:255',
             'type'      => 'required|in:text,video,pdf',
             'content'   => 'nullable|string',
-            'file_path' => 'nullable|string|max:500',
+            'file_path' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,mp4,mkv|max:500',
         ]);
+
+        if ($request->hasFile('file_path')) {
+            // Simpan file fisik ke storage/app/public/materials[cite: 1]
+            $path = $request->file('file_path')->store('materials', 'public');
+            $validated['file_path'] = $path;
+        }
 
         $validated['module_id'] = $moduleId;
         $material = Material::create($validated);
