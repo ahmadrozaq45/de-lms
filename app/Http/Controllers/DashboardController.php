@@ -304,10 +304,48 @@ class DashboardController extends Controller
 
     public function student()
     {
-        $courses      = Course::latest()->get();
-        $totalCourses = $courses->count();
-        $user         = Auth::user();
+        $user = Auth::user();
 
-        return view('student.dashboard', compact('courses', 'totalCourses', 'user'));
+        // 1. Ambil Kursus yang diikuti (Enrollments)
+        $enrolledCourses = CourseEnrollment::with(['course.teacher', 'course.modules.materials'])
+            ->where('user_id', $user->id)
+            ->latest()
+            ->get();
+
+        // 2. Hitung Progress Total & Rata-rata Nilai
+        $totalMaterials = 0;
+        $completedMaterials = 0;
+        $totalScore = 0;
+        $attemptCount = 0;
+
+        foreach ($enrolledCourses as $enrollment) {
+            $course = $enrollment->course;
+            
+            // Ambil semua ID materi di kursus ini
+            $materialIds = Material::whereHas('module', fn($q) => $q->where('course_id', $course->id))->pluck('id');
+            
+            $totalMaterials += $materialIds->count();
+            $completedMaterials += MaterialProgress::where('user_id', $user->id)
+                ->whereIn('material_id', $materialIds)
+                ->where('is_completed', true)
+                ->count();
+        }
+
+        // Hitung Rata-rata Nilai dari Quiz
+        $avgGrade = QuizAttempt::where('user_id', $user->id)->avg('score') ?? 0;
+
+        // Hitung Progress Keseluruhan (%)
+        $overallProgress = $totalMaterials > 0 ? round(($completedMaterials / $totalMaterials) * 100) : 0;
+
+        // Hitung Total Badge
+        $totalBadges = $user->badges()->count();
+
+        return view('student.dashboard', compact(
+            'user',
+            'enrolledCourses',
+            'overallProgress',
+            'avgGrade',
+            'totalBadges'
+        ));
     }
 }
