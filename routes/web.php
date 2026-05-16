@@ -48,6 +48,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         //Route::delete('/materials/{id}', [MaterialController::class, 'destroy'])->name('materials.destroy');
         //Route::put('/modules/{id}', [ModuleController::class, 'update'])->name('modules.update');
         //Route::put('/materials/{id}', [MaterialController::class, 'update'])->name('materials.update');
+        Route::get('/materials/{id}/download', [MaterialController::class, 'download'])->name('materials.download');
         Route::resource('/modules', ModuleController::class);
         Route::resource('/materials', MaterialController::class);
         Route::get('/reviews', [ReviewController::class, 'index'])->name('reviews.index');

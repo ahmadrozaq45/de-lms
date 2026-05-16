@@ -6,7 +6,6 @@ use App\Models\Material;
 use App\Models\CourseEnrollment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Storage;
 
 class MaterialController extends Controller
@@ -19,14 +18,16 @@ class MaterialController extends Controller
     public function store(Request $request, int $moduleId)
     {
         $validated = $request->validate([
-            'title'     => 'required|string|max:255',
-            'type'      => 'required|in:text,video,pdf',
-            'content'   => 'nullable|string',
-            'file_path' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,mp4,mkv|max:500',
+            'title'       => 'required|string|max:255',
+            'type'        => 'required|in:text,file',
+            'description' => 'nullable|string|max:500',
+            'content'     => 'nullable|string',
+            'file_path'   => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,mp4,mkv|max:51200',
         ]);
 
         if ($request->hasFile('file_path')) {
-            // Simpan file fisik ke storage/app/public/materials[cite: 1]
+            // Simpan file ke storage/app/public/materials
+            // Pastikan sudah jalankan: php artisan storage:link
             $path = $request->file('file_path')->store('materials', 'public');
             $validated['file_path'] = $path;
         }
@@ -50,26 +51,66 @@ class MaterialController extends Controller
         // Ambil materi beserta relasi modul dan kelasnya
         $material = Material::with('module.course')->findOrFail($id);
 
-        // Keamanan: Cek apakah siswa sudah enroll di kelas tempat materi ini berada
+        // Keamanan: cek apakah siswa sudah enroll di kelas tempat materi ini berada
         $isEnrolled = CourseEnrollment::where('user_id', Auth::id())
             ->where('course_id', $material->module->course_id)
             ->exists();
 
-        // Jika belum daftar, lempar balik ke halaman kelas dengan pesan error
         if (!$isEnrolled) {
             return redirect()->route('student.courses.show', $material->module->course_id)
-                             ->with('error', 'Wah, kamu harus daftar kelas ini dulu sebelum bisa baca materinya!');
+                             ->with('error', 'Kamu harus daftar kelas ini dulu sebelum bisa membaca materinya!');
         }
 
-        // Tampilkan halaman baca materi
         return view('student.read-material', compact('material'));
     }
 
-    public function destroy (Request $request, int $id)
+    /**
+     * Update materi.
+     * PUT /teacher/materials/{id}
+     */
+    public function update(Request $request, int $id)
     {
         $material = Material::findOrFail($id);
 
-        // Hapus file fisik jika ada
+        $validated = $request->validate([
+            'title'       => 'required|string|max:255',
+            'type'        => 'required|in:text,file',
+            'description' => 'nullable|string|max:500',
+            'content'     => 'nullable|string',
+            'file_path'   => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,mp4,mkv|max:51200',
+        ]);
+
+        if ($request->hasFile('file_path')) {
+            // Hapus file lama dulu jika ada
+            if ($material->file_path) {
+                Storage::disk('public')->delete($material->file_path);
+            }
+            // Simpan file baru
+            $path = $request->file('file_path')->store('materials', 'public');
+            $validated['file_path'] = $path;
+        } else {
+            // Jangan overwrite file_path lama kalau tidak ada file baru yang dikirim
+            unset($validated['file_path']);
+        }
+
+        $material->update($validated);
+
+        if ($request->expectsJson()) {
+            return response()->json($material);
+        }
+
+        return redirect()->back()->with('success', 'Materi berhasil diperbarui!');
+    }
+
+    /**
+     * Hapus materi beserta file fisiknya.
+     * DELETE /teacher/materials/{id}
+     */
+    public function destroy(Request $request, int $id)
+    {
+        $material = Material::findOrFail($id);
+
+        // Hapus file fisik dari storage jika ada
         if ($material->file_path) {
             Storage::disk('public')->delete($material->file_path);
         }
@@ -83,44 +124,33 @@ class MaterialController extends Controller
         return redirect()->back()->with('success', 'Materi berhasil dihapus!');
     }
 
-    public function update(Request $request, int $id)
-    {
-        $material = Material::findOrFail($id);
-
-        $validated = $request->validate([
-            'title'     => 'required|string|max:255',
-            'type'      => 'required|in:text,video,pdf',
-            'content'   => 'nullable|string',
-            'file_path' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,mp4,mkv|max:500',
-        ]);
-
-        if ($request->hasFile('file_path')) {
-            // Hapus file lama jika ada
-            if ($material->file_path) {
-                Storage::disk('public')->delete($material->file_path);
-            }
-            // Simpan file baru
-            $path = $request->file('file_path')->store('materials', 'public');
-            $validated['file_path'] = $path;
-        }
-
-        $material->update($validated);
-
-        if ($request->expectsJson()) {
-            return response()->json($material);
-        }
-
-        return redirect()->back()->with('success', 'Materi berhasil diperbarui!');
-    }
-
+    /**
+     * Download file materi.
+     * GET /teacher/materials/{id}/download  (guru)
+     * GET /student/materials/{id}/download  (siswa)
+     */
     public function download(int $id)
     {
-        $material = Material::findOrFail($id);
+        $material = Material::with('module.course')->findOrFail($id);
 
-        if (!$material->file_path) {
-            return redirect()->back()->with('error', 'Maaf, materi ini tidak memiliki file untuk diunduh.');
+        // Kalau diakses siswa, pastikan sudah enroll
+        if (Auth::user()->role === 'student') {
+            $isEnrolled = CourseEnrollment::where('user_id', Auth::id())
+                ->where('course_id', $material->module->course_id)
+                ->exists();
+
+            if (!$isEnrolled) {
+                return redirect()->back()->with('error', 'Kamu belum terdaftar di kelas ini.');
+            }
         }
 
-        return Storage::disk('public')->download($material->file_path);
+        if (!$material->file_path || !Storage::disk('public')->exists($material->file_path)) {
+            return redirect()->back()->with('error', 'File tidak ditemukan atau sudah dihapus.');
+        }
+
+        // Download dengan nama file asli (bukan hash)
+        $filename = $material->title . '.' . pathinfo($material->file_path, PATHINFO_EXTENSION);
+
+        return Storage::disk('public')->download($material->file_path, $filename);
     }
 }

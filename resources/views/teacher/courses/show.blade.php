@@ -93,7 +93,14 @@
                         
                         @forelse($module->materials as $material)
                             <div class="flex items-center justify-between p-3 bg-gray-50/50 rounded-xl hover:bg-gray-50 transition-all border border-gray-100 group">
-                                <div class="flex items-center gap-4 flex-1">
+                            {{-- Bagian kiri: klik untuk baca/download --}}
+                            @if($material->type == 'file')
+                                <a href="{{ route('teacher.materials.download', $material->id) }}"
+                                class="flex items-center gap-4 flex-1 cursor-pointer">
+                            @else
+                                <a href="{{ route('teacher.materials.show', $material->id) }}"
+                                class="flex items-center gap-4 flex-1 cursor-pointer">
+                            @endif
                                     <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg shadow-sm
                                         @if($material->type == 'file') bg-purple-50 text-purple-600 
                                         @else bg-blue-50 text-blue-600 @endif">
@@ -110,17 +117,17 @@
 
                                     <div class="flex-1">
                                         <div class="flex items-center gap-2">
-                                            <span class="font-semibold text-gray-700">{{ $material->title }}</span>
+                                            <span class="font-semibold text-gray-700 group-hover:text-blue-600 transition">{{ $material->title }}</span>
                                             <span class="text-[10px] font-bold text-gray-400 bg-white border border-gray-200 px-1.5 py-0.5 rounded uppercase tracking-tighter">{{ $material->type }}</span>
+                                            @if($material->type == 'file')
+                                                {{-- Ikon download kecil sebagai hint --}}
+                                                <svg class="w-4 h-4 text-gray-300 group-hover:text-blue-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                                </svg>
+                                            @endif
                                         </div>
-                                        
-                                        @if($material->type == 'text' && $material->content)
-                                            <div class="mt-2 text-sm text-gray-600 prose-sm prose-blue max-w-none border-l-4 border-blue-100 pl-4 bg-blue-50/30 py-2 rounded-r-lg">
-                                                {!! $material->content !!}
-                                            </div>
-                                        @endif
                                     </div>
-                                </div>
+                                </a>
 
                                 <div class="flex items-center gap-1 ml-4">
                                     <button onclick="toggleModal('modal-edit-material-{{ $material->id }}')"
