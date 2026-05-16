@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\{Assignment, Submission};
 use App\Services\BadgeService;
 use Illuminate\Http\Request; 
-use Illumiate\Http\JsonResponse;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 
@@ -48,10 +48,6 @@ class AssignmentController extends Controller
         if ($request->hasFile('file_path')) {
             $filePath = $request->file('file_path')->store('submissions', 'public');
         }   
-
-        /* $this->validate($request, [
-            'file_path|answer' => 'required_without:answer',
-        ]); */
 
         $submission = Submission::create([
             'assignment_id' => $assignmentId,

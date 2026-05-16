@@ -6,6 +6,5 @@ use Illuminate\Database\Eloquent\Relations\Pivot;
 
 class UserBadge extends Pivot
 {
-    // Jika ada field tambahan di tabel pivot, bisa didefinisikan di sini
-    protected $table = 'user_badges';
+    protected $fillable = ['badge_id', 'earned_at'];
 }
