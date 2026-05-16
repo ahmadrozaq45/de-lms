@@ -29,6 +29,24 @@ class ModuleController extends Controller
         return redirect()->back()->with('success', 'Modul berhasil ditambahkan!');
     }
 
+    public function update(Request $request, int $id)
+    {
+        $module = Module::findOrFail($id);
+
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'order' => 'nullable|integer|min:0',
+        ]);
+
+        $module->update($validated);
+
+        if ($request->expectsJson()) {
+            return response()->json($module);
+        }
+
+        return redirect()->back()->with('success', 'Modul berhasil diperbarui!');
+    }
+
     public function destroy(Request $request, int $id)
     {
         $module = Module::findOrFail($id);

@@ -82,4 +82,45 @@ class MaterialController extends Controller
 
         return redirect()->back()->with('success', 'Materi berhasil dihapus!');
     }
+
+    public function update(Request $request, int $id)
+    {
+        $material = Material::findOrFail($id);
+
+        $validated = $request->validate([
+            'title'     => 'required|string|max:255',
+            'type'      => 'required|in:text,video,pdf',
+            'content'   => 'nullable|string',
+            'file_path' => 'nullable|file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx,mp4,mkv|max:500',
+        ]);
+
+        if ($request->hasFile('file_path')) {
+            // Hapus file lama jika ada
+            if ($material->file_path) {
+                Storage::disk('public')->delete($material->file_path);
+            }
+            // Simpan file baru
+            $path = $request->file('file_path')->store('materials', 'public');
+            $validated['file_path'] = $path;
+        }
+
+        $material->update($validated);
+
+        if ($request->expectsJson()) {
+            return response()->json($material);
+        }
+
+        return redirect()->back()->with('success', 'Materi berhasil diperbarui!');
+    }
+
+    public function download(int $id)
+    {
+        $material = Material::findOrFail($id);
+
+        if (!$material->file_path) {
+            return redirect()->back()->with('error', 'Maaf, materi ini tidak memiliki file untuk diunduh.');
+        }
+
+        return Storage::disk('public')->download($material->file_path);
+    }
 }
