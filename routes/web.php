@@ -7,6 +7,7 @@ use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\EnrollmentController;
+use App\Http\Controllers\AssignmentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -41,6 +42,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
              ->name('courses.modules.store');
         Route::post('/modules/{moduleId}/materials', [MaterialController::class, 'store'])
              ->name('modules.materials.store');
+        Route::post('/modules/{moduleId}/assignments', [AssignmentController::class, 'store'])
+             ->name('modules.assignments.store');
         //Route::delete('/modules/{id}', [ModuleController::class, 'destroy'])->name('modules.destroy');
         //Route::delete('/materials/{id}', [MaterialController::class, 'destroy'])->name('materials.destroy');
         //Route::put('/modules/{id}', [ModuleController::class, 'update'])->name('modules.update');

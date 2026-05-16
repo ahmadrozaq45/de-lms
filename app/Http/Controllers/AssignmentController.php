@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\{Assignment, Submission};
+use App\Models\{Assignment, Submission, Module};
 use App\Services\BadgeService;
 use Illuminate\Http\Request; 
 use Illuminate\Http\JsonResponse;
@@ -17,8 +17,31 @@ class AssignmentController extends Controller
      * Guru membuat assignment baru.
      * POST /api/assignments
      */
-    public function store(Request $request): JsonResponse
+    public function store(Request $request, $moduleId = null) // 🚀 2. TAMBAH PARAMETER $moduleId & HAPUS ': JsonResponse'
     {
+        if ($moduleId) {
+            $request->validate([
+                'title'       => 'required|string|max:255',
+                'description' => 'nullable|string',
+                'due_date'    => 'required|date',
+                'max_score'   => 'required|integer|min:1|max:100',
+            ]);
+
+            // Ambil data modul untuk mendapatkan course_id secara otomatis
+            $module = Module::findOrFail($moduleId);
+
+            Assignment::create([
+                'module_id'    => $moduleId,
+                'course_id'    => $module->course_id,
+                'title'        => $request->title,
+                'instructions' => $request->description, // Memetakan 'description' form ke 'instructions' DB
+                'due_date'     => $request->due_date,
+                'max_score'    => $request->max_score,
+            ]);
+
+            return redirect()->back()->with('success', 'Tugas baru berhasil ditambahkan!');
+        }
+
         $validated = $request->validate([
             'course_id'    => 'required|integer|exists:courses,id',
             'title'        => 'required|string|max:255',

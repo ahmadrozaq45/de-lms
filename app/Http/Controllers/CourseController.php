@@ -69,7 +69,7 @@ class CourseController extends Controller
      */
     public function show(Request $request, int $id)
     {
-        $course = Course::with(['modules.materials', 'teacher:id,name'])->findOrFail($id);
+        $course = Course::with(['modules.materials', 'modules.assignments', 'teacher:id,name'])->findOrFail($id);
 
         if ($request->expectsJson()) {
             $course->loadCount('enrollments');

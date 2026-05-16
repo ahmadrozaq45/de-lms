@@ -7,8 +7,12 @@ use Illuminate\Database\Eloquent\Relations\{BelongsTo, HasMany, MorphMany};
 
 class Assignment extends Model
 {
-    protected $fillable = ['course_id', 'title', 'instructions', 'due_date'];
+    protected $fillable = ['module_id', 'course_id', 'title', 'instructions', 'due_date'];
 
+    public function module(): BelongsTo
+    {
+        return $this->belongsTo(Module::class);
+    }
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);

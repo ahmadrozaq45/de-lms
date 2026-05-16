@@ -53,6 +53,11 @@
                                 class="bg-green-600 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-green-700 transition">
                             + Tambah Materi
                         </button>
+
+                        <button onclick="toggleModal('modal-assignment-{{ $module->id }}')"
+                                class="bg-indigo-600 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-indigo-700 transition">
+                            + Tambah Tugas
+                        </button>
                         
                         <button onclick="toggleModal('modal-edit-modul-{{ $module->id }}')"
                                 class="bg-yellow-50 text-yellow-600 hover:bg-yellow-100 p-2 rounded-lg transition" title="Edit Modul">
@@ -139,9 +144,7 @@
                                 </div>
                             </div>
 
-                            {{-- ======================================= --}}
-                            {{-- MODAL EDIT MATERI (dengan CKEditor)     --}}
-                            {{-- ======================================= --}}
+                            {{-- MODAL EDIT MATERI --}}
                             <div id="modal-edit-material-{{ $material->id }}" class="fixed inset-0 z-50 hidden overflow-y-auto">
                                 <div class="flex items-center justify-center min-h-screen p-4">
                                     <div class="fixed inset-0 bg-gray-900 bg-opacity-60 transition-opacity"
@@ -155,8 +158,7 @@
 
                                             <div class="px-8 py-5 border-b border-gray-100 flex justify-between items-center">
                                                 <h3 class="text-xl font-bold text-gray-900">Edit Materi</h3>
-                                                <button type="button"
-                                                        onclick="toggleModal('modal-edit-material-{{ $material->id }}')"
+                                                <button type="button" onclick="toggleModal('modal-edit-material-{{ $material->id }}')"
                                                         class="text-gray-400 hover:text-gray-600">
                                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -173,29 +175,21 @@
 
                                                 <div>
                                                     <label class="block text-sm font-bold text-gray-700 mb-2">Tipe Materi</label>
-                                                    <select name="type"
-                                                            onchange="handleTypeChangeEdit(this, {{ $material->id }})"
+                                                    <select name="type" onchange="handleTypeChangeEdit(this, {{ $material->id }})"
                                                             class="w-full border-gray-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 py-3">
                                                         <option value="text" @selected($material->type == 'text')>📝 Teks / Artikel</option>
                                                         <option value="file" @selected($material->type == 'file')>📁 Upload File (Dokumen / Video)</option>
                                                     </select>
                                                 </div>
 
-                                                {{-- Konten teks dengan CKEditor --}}
-                                                <div id="edit-content-section-{{ $material->id }}"
-                                                     class="{{ $material->type == 'file' ? 'hidden' : '' }}">
+                                                <div id="edit-content-section-{{ $material->id }}" class="{{ $material->type == 'file' ? 'hidden' : '' }}">
                                                     <label class="block text-sm font-bold text-gray-700 mb-2 uppercase">Isi Konten Materi</label>
-                                                    <textarea name="content"
-                                                              class="edit-editor-container"
-                                                              data-material-id="{{ $material->id }}">{{ $material->content }}</textarea>
+                                                    <textarea name="content" class="edit-editor-container" data-material-id="{{ $material->id }}">{{ $material->content }}</textarea>
                                                 </div>
 
-                                                {{-- Upload file --}}
-                                                <div id="edit-file-section-{{ $material->id }}"
-                                                     class="{{ $material->type != 'file' ? 'hidden' : '' }} bg-gray-50 p-6 rounded-xl border-2 border-dashed border-gray-300">
+                                                <div id="edit-file-section-{{ $material->id }}" class="{{ $material->type != 'file' ? 'hidden' : '' }} bg-gray-50 p-6 rounded-xl border-2 border-dashed border-gray-300">
                                                     <label class="block text-sm font-bold text-gray-700 mb-2">Ganti File (opsional)</label>
-                                                    <input type="file" name="file_path"
-                                                           accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mp4,.mkv"
+                                                    <input type="file" name="file_path" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mp4,.mkv"
                                                            class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
                                                     @if($material->file_path)
                                                         <p class="text-xs text-gray-500 mt-2">
@@ -208,26 +202,47 @@
                                             </div>
 
                                             <div class="px-8 py-6 bg-gray-50 flex flex-row-reverse gap-3">
-                                                <button type="submit"
-                                                        class="bg-blue-600 text-white px-10 py-2.5 rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition">
-                                                    Simpan Perubahan
-                                                </button>
-                                                <button type="button"
-                                                        onclick="toggleModal('modal-edit-material-{{ $material->id }}')"
-                                                        class="bg-white text-gray-600 px-10 py-2.5 rounded-xl font-bold border border-gray-200 hover:bg-gray-100 transition">
-                                                    Batal
-                                                </button>
+                                                <button type="submit" class="bg-blue-600 text-white px-10 py-2.5 rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition">Simpan Perubahan</button>
+                                                <button type="button" onclick="toggleModal('modal-edit-material-{{ $material->id }}')" class="bg-white text-gray-600 px-10 py-2.5 rounded-xl font-bold border border-gray-200 hover:bg-gray-100 transition">Batal</button>
                                             </div>
                                         </form>
                                     </div>
                                 </div>
                             </div>
-                            {{-- END MODAL EDIT MATERI --}}
-
                         @empty
                             <p class="text-gray-400 text-sm italic pl-2">Belum ada materi di modul ini.</p>
                         @endforelse
                     </div>
+
+                    <div class="mt-8 pt-6 border-t border-gray-100 space-y-3">
+                        <p class="text-sm font-bold text-gray-500 flex items-center gap-1.5">
+                            <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h11a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                            Tugas / Assignment Modul:
+                        </p>
+
+                        @forelse($module->assignments as $assignment)
+                            <div class="flex items-center justify-between p-3 bg-indigo-50/30 rounded-xl border border-indigo-100/50 group hover:bg-indigo-50/60 transition-all text-left">
+                                <div class="flex items-center gap-4 flex-1">
+                                    <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg shadow-sm bg-indigo-50 text-indigo-600">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-semibold text-gray-700">{{ $assignment->title }}</span>
+                                            <span class="text-[10px] font-bold text-indigo-600 bg-indigo-50 border border-indigo-100 px-1.5 py-0.5 rounded uppercase tracking-tighter">Tugas</span>
+                                        </div>
+                                        <p class="text-xs text-gray-400 mt-1">
+                                            Tenggat: <span class="text-red-500 font-semibold">{{ \Carbon\Carbon::parse($assignment->due_date)->format('d M Y, H:i') }}</span> 
+                                            <span class="text-gray-300 mx-1">|</span> Skor Maks: <span class="font-semibold text-gray-600">{{ $assignment->max_score }}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        @empty
+                            <p class="text-gray-400 text-sm italic pl-2">Belum ada tugas di modul ini.</p>
+                        @endforelse
+                    </div>
+
                 </div>
             </div>
 
@@ -236,62 +251,88 @@
             {{-- ======================================= --}}
             <div id="modal-material-{{ $module->id }}" class="fixed inset-0 z-50 hidden overflow-y-auto">
                 <div class="flex items-center justify-center min-h-screen p-4">
-                    <div class="fixed inset-0 bg-gray-900 bg-opacity-60 transition-opacity"
-                         onclick="toggleModal('modal-material-{{ $module->id }}')"></div>
-                    
+                    <div class="fixed inset-0 bg-gray-900 bg-opacity-60 transition-opacity" onclick="toggleModal('modal-material-{{ $module->id }}')"></div>
                     <div class="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full overflow-hidden transform transition-all">
                         <form action="{{ route('teacher.modules.materials.store', $module->id) }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             <div class="px-8 py-5 border-b border-gray-100 flex justify-between items-center">
                                 <h3 class="text-xl font-bold text-gray-900">Tambah Materi ke: {{ $module->title }}</h3>
-                                <button type="button" onclick="toggleModal('modal-material-{{ $module->id }}')"
-                                        class="text-gray-400 hover:text-gray-600">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
+                                <button type="button" onclick="toggleModal('modal-material-{{ $module->id }}')" class="text-gray-400 hover:text-gray-600">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                </button>
+                            </div>
+                            <div class="p-8 space-y-6">
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-2">Judul Materi</label>
+                                    <input type="text" name="title" class="w-full border-gray-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 py-3" placeholder="Contoh: Dasar-dasar Segmentasi Citra" required>
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-bold text-gray-700 mb-2">Tipe Materi</label>
+                                    <select name="type" onchange="handleTypeChange(this, {{ $module->id }})" class="w-full border-gray-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 py-3">
+                                        <option value="text">📝 Teks / Artikel</option>
+                                        <option value="file">📁 Upload File (Dokumen / Video)</option>
+                                    </select>
+                                </div>
+                                <div id="content-section-{{ $module->id }}">
+                                    <label class="block text-sm font-bold text-gray-700 mb-2 uppercase">Isi Konten Materi</label>
+                                    <textarea name="content" class="editor-container" data-module-id="{{ $module->id }}"></textarea>
+                                </div>
+                                <div id="file-section-{{ $module->id }}" class="hidden bg-gray-50 p-6 rounded-xl border-2 border-dashed border-gray-300">
+                                    <label class="block text-sm font-bold text-gray-700 mb-2">Pilih File</label>
+                                    <input type="file" name="file_path" accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mp4,.mkv" class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
+                                    <p class="text-xs text-gray-500 mt-2 italic">Format didukung: PDF, DOC/X, XLS/X, PPT/X, MP4, MKV. (Ukuran maksimal: 20MB)</p>
+                                </div>
+                            </div>
+                            <div class="px-8 py-6 bg-gray-50 flex flex-row-reverse gap-3">
+                                <button type="submit" class="bg-blue-600 text-white px-10 py-2.5 rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition">Simpan</button>
+                                <button type="button" onclick="toggleModal('modal-material-{{ $module->id }}')" class="bg-white text-gray-600 px-10 py-2.5 rounded-xl font-bold border border-gray-200 hover:bg-gray-100 transition">Batal</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div id="modal-assignment-{{ $module->id }}" class="fixed inset-0 z-50 hidden overflow-y-auto">
+                <div class="flex items-center justify-center min-h-screen p-4">
+                    <div class="fixed inset-0 bg-gray-900 bg-opacity-60 transition-opacity" 
+                         onclick="toggleModal('modal-assignment-{{ $module->id }}')"></div>
+                    
+                    <div class="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden transform transition-all text-left">
+                        <form action="{{ route('teacher.modules.assignments.store', $module->id) }}" method="POST">
+                            @csrf
+                            <div class="px-8 py-5 border-b border-gray-100 flex justify-between items-center">
+                                <h3 class="text-xl font-bold text-gray-900">Tambah Tugas ke: {{ $module->title }}</h3>
+                                <button type="button" onclick="toggleModal('modal-assignment-{{ $module->id }}')" class="text-gray-400 hover:text-gray-600">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                 </button>
                             </div>
 
                             <div class="p-8 space-y-6">
                                 <div>
-                                    <label class="block text-sm font-bold text-gray-700 mb-2">Judul Materi</label>
-                                    <input type="text" name="title"
-                                           class="w-full border-gray-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 py-3"
-                                           placeholder="Contoh: Dasar-dasar Segmentasi Citra" required>
+                                    <label class="block text-sm font-bold text-gray-700 mb-2">Judul Tugas</label>
+                                    <input type="text" name="title" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3" placeholder="Contoh: Tugas 1: Analisis Model Database" required>
                                 </div>
 
                                 <div>
-                                    <label class="block text-sm font-bold text-gray-700 mb-2">Tipe Materi</label>
-                                    <select name="type" onchange="handleTypeChange(this, {{ $module->id }})"
-                                            class="w-full border-gray-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 py-3">
-                                        <option value="text">📝 Teks / Artikel</option>
-                                        <option value="file">📁 Upload File (Dokumen / Video)</option>
-                                    </select>
-                                </div>
-                                
-                                <div id="content-section-{{ $module->id }}">
-                                    <label class="block text-sm font-bold text-gray-700 mb-2 uppercase">Isi Konten Materi</label>
-                                    <textarea name="content" class="editor-container" data-module-id="{{ $module->id }}"></textarea>
+                                    <label class="block text-sm font-bold text-gray-700 mb-2 uppercase">Instruksi Tugas</label>
+                                    <textarea name="description" rows="4" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" placeholder="Tuliskan petunjuk pengerjaan tugas secara detail..."></textarea>
                                 </div>
 
-                                <div id="file-section-{{ $module->id }}" class="hidden bg-gray-50 p-6 rounded-xl border-2 border-dashed border-gray-300">
-                                    <label class="block text-sm font-bold text-gray-700 mb-2">Pilih File</label>
-                                    <input type="file" name="file_path"
-                                           accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.mp4,.mkv"
-                                           class="w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100">
-                                    <p class="text-xs text-gray-500 mt-2 italic">Format didukung: PDF, DOC/X, XLS/X, PPT/X, MP4, MKV. (Ukuran maksimal: 20MB)</p>
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-bold text-gray-700 mb-2">Tenggat Waktu (Deadline)</label>
+                                        <input type="datetime-local" name="due_date" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3" required>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-bold text-gray-700 mb-2">Nilai Maksimal</label>
+                                        <input type="number" name="max_score" min="1" max="100" value="100" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3" required>
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="px-8 py-6 bg-gray-50 flex flex-row-reverse gap-3">
-                                <button type="submit"
-                                        class="bg-blue-600 text-white px-10 py-2.5 rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition">
-                                    Simpan
-                                </button>
-                                <button type="button" onclick="toggleModal('modal-material-{{ $module->id }}')"
-                                        class="bg-white text-gray-600 px-10 py-2.5 rounded-xl font-bold border border-gray-200 hover:bg-gray-100 transition">
-                                    Batal
-                                </button>
+                                <button type="submit" class="bg-indigo-600 text-white px-10 py-2.5 rounded-xl font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition">Simpan Tugas</button>
+                                <button type="button" onclick="toggleModal('modal-assignment-{{ $module->id }}')" class="bg-white text-gray-600 px-10 py-2.5 rounded-xl font-bold border border-gray-200 hover:bg-gray-100 transition">Batal</button>
                             </div>
                         </form>
                     </div>
@@ -303,55 +344,35 @@
             {{-- ======================================= --}}
             <div id="modal-edit-modul-{{ $module->id }}" class="fixed inset-0 z-50 hidden overflow-y-auto">
                 <div class="flex items-center justify-center min-h-screen p-4">
-                    <div class="fixed inset-0 bg-gray-900 bg-opacity-60 transition-opacity"
-                         onclick="toggleModal('modal-edit-modul-{{ $module->id }}')"></div>
-                    
+                    <div class="fixed inset-0 bg-gray-900 bg-opacity-60 transition-opacity" onclick="toggleModal('modal-edit-modul-{{ $module->id }}')"></div>
                     <div class="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full overflow-hidden transform transition-all">
                         <form action="{{ route('teacher.modules.update', $module->id) }}" method="POST">
                             @csrf
                             @method('PUT')
-
                             <div class="px-8 py-5 border-b border-gray-100 flex justify-between items-center">
                                 <h3 class="text-xl font-bold text-gray-900">Edit Modul: {{ $module->title }}</h3>
-                                <button type="button"
-                                        onclick="toggleModal('modal-edit-modul-{{ $module->id }}')"
-                                        class="text-gray-400 hover:text-gray-600">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                                    </svg>
+                                <button type="button" onclick="toggleModal('modal-edit-modul-{{ $module->id }}')" class="text-gray-400 hover:text-gray-600">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                 </button>
                             </div>
-
                             <div class="p-8 space-y-6">
                                 <div>
                                     <label class="block text-sm font-bold text-gray-700 mb-2">Judul Modul</label>
-                                    <input type="text" name="title" value="{{ $module->title }}"
-                                           class="w-full border-gray-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 py-3" required>
+                                    <input type="text" name="title" value="{{ $module->title }}" class="w-full border-gray-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 py-3" required>
                                 </div>
                                 <div>
                                     <label class="block text-sm font-bold text-gray-700 mb-2">Urutan (opsional)</label>
-                                    <input type="number" name="order" value="{{ $module->order }}" min="0"
-                                           class="w-full border-gray-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 py-3"
-                                           placeholder="Contoh: 1">
+                                    <input type="number" name="order" value="{{ $module->order }}" min="0" class="w-full border-gray-200 rounded-xl focus:ring-blue-500 focus:border-blue-500 py-3" placeholder="Contoh: 1">
                                 </div>
                             </div>
-
                             <div class="px-8 py-6 bg-gray-50 flex flex-row-reverse gap-3">
-                                <button type="submit"
-                                        class="bg-blue-600 text-white px-10 py-2.5 rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition">
-                                    Simpan Perubahan
-                                </button>
-                                <button type="button"
-                                        onclick="toggleModal('modal-edit-modul-{{ $module->id }}')"
-                                        class="bg-white text-gray-600 px-10 py-2.5 rounded-xl font-bold border border-gray-200 hover:bg-gray-100 transition">
-                                    Batal
-                                </button>
+                                <button type="submit" class="bg-blue-600 text-white px-10 py-2.5 rounded-xl font-bold hover:bg-blue-700 shadow-lg shadow-blue-200 transition">Simpan Perubahan</button>
+                                <button type="button" onclick="toggleModal('modal-edit-modul-{{ $module->id }}')" class="bg-white text-gray-600 px-10 py-2.5 rounded-xl font-bold border border-gray-200 hover:bg-gray-100 transition">Batal</button>
                             </div>
                         </form>
                     </div>
                 </div>
             </div>
-            {{-- END MODAL EDIT MODUL --}}
 
             @endforeach
 
@@ -360,13 +381,9 @@
 
     <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
     <script>
-        // Simpan semua instance CKEditor
-        // Key: "add-{moduleId}" untuk tambah materi, "edit-{materialId}" untuk edit materi
         const editors = {};
 
         document.addEventListener('DOMContentLoaded', function () {
-
-            // ─── CKEditor untuk TAMBAH MATERI ───────────────────────────
             document.querySelectorAll('.editor-container').forEach(el => {
                 const moduleId = el.getAttribute('data-module-id');
                 ClassicEditor
@@ -379,11 +396,8 @@
                     .catch(error => console.error(error));
             });
 
-            // ─── CKEditor untuk EDIT MATERI ─────────────────────────────
-            // Hanya inisialisasi textarea yang TIDAK tersembunyi (type = text)
             document.querySelectorAll('.edit-editor-container').forEach(el => {
                 const materialId = el.getAttribute('data-material-id');
-                // Cek apakah section-nya tersembunyi (artinya tipe = file, tidak perlu CKEditor)
                 const parentSection = el.closest('[id^="edit-content-section-"]');
                 if (parentSection && parentSection.classList.contains('hidden')) return;
 
@@ -403,7 +417,6 @@
             modal.classList.toggle('hidden');
         }
 
-        // Toggle section tambah materi (text vs file)
         function handleTypeChange(select, moduleId) {
             const contentSection = document.getElementById('content-section-' + moduleId);
             const fileSection    = document.getElementById('file-section-' + moduleId);
@@ -417,7 +430,6 @@
             }
         }
 
-        // Toggle section edit materi (text vs file)
         function handleTypeChangeEdit(select, materialId) {
             const contentSection = document.getElementById('edit-content-section-' + materialId);
             const fileSection    = document.getElementById('edit-file-section-' + materialId);
@@ -425,7 +437,6 @@
             if (select.value === 'text') {
                 contentSection.classList.remove('hidden');
                 fileSection.classList.add('hidden');
-                // Kalau CKEditor belum diinisialisasi (materi awalnya bertipe file), init sekarang
                 if (!editors['edit-' + materialId]) {
                     const el = contentSection.querySelector('.edit-editor-container');
                     if (el) {
