@@ -41,11 +41,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
              ->name('courses.modules.store');
         Route::post('/modules/{moduleId}/materials', [MaterialController::class, 'store'])
              ->name('modules.materials.store');
-        Route::delete('/modules/{id}', [ModuleController::class, 'destroy'])->name('modules.destroy');
-        Route::delete('/materials/{id}', [MaterialController::class, 'destroy'])->name('materials.destroy');
-        Route::put('/modules/{id}', [ModuleController::class, 'update'])->name('modules.update');
-        Route::put('/materials/{id}', [MaterialController::class, 'update'])->name('materials.update');
-
+        //Route::delete('/modules/{id}', [ModuleController::class, 'destroy'])->name('modules.destroy');
+        //Route::delete('/materials/{id}', [MaterialController::class, 'destroy'])->name('materials.destroy');
+        //Route::put('/modules/{id}', [ModuleController::class, 'update'])->name('modules.update');
+        //Route::put('/materials/{id}', [MaterialController::class, 'update'])->name('materials.update');
+        Route::resource('/modules', ModuleController::class);
+        Route::resource('/materials', MaterialController::class);
         Route::get('/reviews', [ReviewController::class, 'index'])->name('reviews.index');
         Route::patch('/reviews/{id}', [ReviewController::class, 'update'])->name('reviews.update');
     });
