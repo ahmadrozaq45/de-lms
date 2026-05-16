@@ -64,4 +64,22 @@ class MaterialController extends Controller
         // Tampilkan halaman baca materi
         return view('student.read-material', compact('material'));
     }
+
+    public function destroy (Request $request, int $id)
+    {
+        $material = Material::findOrFail($id);
+
+        // Hapus file fisik jika ada
+        if ($material->file_path) {
+            Storage::disk('public')->delete($material->file_path);
+        }
+
+        $material->delete();
+
+        if ($request->expectsJson()) {
+            return response()->json(null, 204);
+        }
+
+        return redirect()->back()->with('success', 'Materi berhasil dihapus!');
+    }
 }

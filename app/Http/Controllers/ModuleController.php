@@ -28,4 +28,16 @@ class ModuleController extends Controller
 
         return redirect()->back()->with('success', 'Modul berhasil ditambahkan!');
     }
+
+    public function destroy(Request $request, int $id)
+    {
+        $module = Module::findOrFail($id);
+        $module->delete();
+
+        if ($request->expectsJson()) {
+            return response()->json(null, 204);
+        }
+
+        return redirect()->back()->with('success', 'Modul berhasil dihapus!');
+    }
 }

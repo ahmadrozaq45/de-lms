@@ -8,6 +8,15 @@
     <div class="py-12 bg-gray-50 min-h-screen">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
+            @if(session('success'))
+                <div class="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl shadow-sm flex items-center gap-2">
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span class="font-medium">{{ session('success') }}</span>
+                </div>
+            @endif
+            
             <div class="bg-white overflow-hidden shadow-sm rounded-xl mb-6 border border-gray-100">
                 <div class="p-6">
                     <h3 class="text-lg font-bold mb-4 text-gray-800">Tambah Modul Baru</h3>
@@ -30,9 +39,20 @@
                         </div>
                         <h4 class="font-bold text-gray-800 text-lg">{{ $module->title }}</h4>
                     </div>
-                    <button onclick="toggleModal('modal-material-{{ $module->id }}')" class="bg-green-600 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-green-700 transition">
-                        + Tambah Materi
-                    </button>
+                    
+                    <div class="flex items-center gap-2">
+                        <button onclick="toggleModal('modal-material-{{ $module->id }}')" class="bg-green-600 text-white text-xs font-bold px-4 py-2 rounded-lg hover:bg-green-700 transition">
+                            + Tambah Materi
+                        </button>
+                        
+                        <form action="{{ route('teacher.modules.destroy', $module->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus modul ini beserta seluruh materinya?')">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="bg-red-50 text-red-600 hover:bg-red-100 p-2 rounded-lg transition" title="Hapus Modul">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-16v1a3 3 0 003 3h10M9 3h6m2 5H7"></path></svg>
+                            </button>
+                        </form>
+                    </div>
                 </div>
                 
                 <div class="p-6">
@@ -42,37 +62,47 @@
                         </div>
                     @endif
 
-                    <div class="space-y-4">
+                    <div class="space-y-3">
                         <p class="text-sm font-medium text-gray-500">Pelajari materi berikut ini:</p>
                         
                         @forelse($module->materials as $material)
-                            <div class="flex items-center gap-4 p-2 group transition-all">
-                                <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg shadow-sm
-                                    @if($material->type == 'file') bg-purple-50 text-purple-600 
-                                    @else bg-blue-50 text-blue-600 @endif">
-                                    
-                                    @if($material->type == 'file')
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                                    @else
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                    @endif
+                            <div class="flex items-center justify-between p-3 bg-gray-50/50 rounded-xl hover:bg-gray-50 transition-all border border-gray-100 group">
+                                <div class="flex items-center gap-4 flex-1">
+                                    <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg shadow-sm
+                                        @if($material->type == 'file') bg-purple-50 text-purple-600 
+                                        @else bg-blue-50 text-blue-600 @endif">
+                                        
+                                        @if($material->type == 'file')
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
+                                        @else
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                        @endif
+                                    </div>
+
+                                    <div class="flex-1">
+                                        <div class="flex items-center gap-2">
+                                            <span class="font-semibold text-gray-700 hover:text-blue-600 transition cursor-pointer">{{ $material->title }}</span>
+                                            <span class="text-[10px] font-bold text-gray-400 bg-white border border-gray-200 px-1.5 py-0.5 rounded uppercase tracking-tighter shadow-2xs">{{ $material->type }}</span>
+                                        </div>
+                                        
+                                        @if($material->type == 'text' && $material->content)
+                                            <div class="mt-2 text-sm text-gray-600 prose-sm prose-blue max-w-none border-l-4 border-blue-100 pl-4 bg-blue-50/30 py-2 rounded-r-lg">
+                                                {!! $material->content !!}
+                                            </div>
+                                        @endif
+                                    </div>
                                 </div>
 
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-2">
-                                        <span class="font-semibold text-gray-700 hover:text-blue-600 transition cursor-pointer">{{ $material->title }}</span>
-                                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">{{ $material->type }}</span>
-                                    </div>
-                                    
-                                    @if($material->type == 'text' && $material->content)
-                                        <div class="mt-2 text-sm text-gray-600 prose-sm prose-blue max-w-none border-l-4 border-blue-100 pl-4 bg-blue-50/30 py-2 rounded-r-lg">
-                                            {!! $material->content !!}
-                                        </div>
-                                    @endif
-                                </div>
+                                <form action="{{ route('teacher.materials.destroy', $material->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus materi ini?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="text-gray-400 hover:text-red-600 p-2 rounded-lg hover:bg-red-50 transition" title="Hapus Materi">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-16v1a3 3 0 003 3h10M9 3h6m2 5H7"></path></svg>
+                                    </button>
+                                </form>
                             </div>
                         @empty
-                            <p class="text-gray-400 text-sm italic">Belum ada materi di modul ini.</p>
+                            <p class="text-gray-400 text-sm italic pl-2">Belum ada materi di modul ini.</p>
                         @endforelse
                     </div>
                 </div>
@@ -88,7 +118,7 @@
                             <div class="px-8 py-5 border-b border-gray-100 flex justify-between items-center">
                                 <h3 class="text-xl font-bold text-gray-900">Tambah Materi ke: {{ $module->title }}</h3>
                                 <button type="button" onclick="toggleModal('modal-material-{{ $module->id }}')" class="text-gray-400 hover:text-gray-600">
-                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l18 18"></path></svg>
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                                 </button>
                             </div>
 
@@ -132,7 +162,6 @@
     </div>
 
     <script src="https://cdn.ckeditor.com/ckeditor5/39.0.1/classic/ckeditor.js"></script>
-
     <script>
         const editors = {};
 
@@ -164,7 +193,7 @@
             if (select.value === 'text') {
                 contentSection.classList.remove('hidden');
                 fileSection.classList.add('hidden');
-            } else { // Jika valuenya 'file'
+            } else {
                 contentSection.classList.add('hidden');
                 fileSection.classList.remove('hidden');
             }
