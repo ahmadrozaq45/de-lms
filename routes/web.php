@@ -8,6 +8,7 @@ use App\Http\Controllers\MaterialController;
 use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\AssignmentController;
+use App\Http\Controllers\StudentController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -44,24 +45,26 @@ Route::middleware(['auth', 'verified'])->group(function () {
              ->name('modules.materials.store');
         Route::post('/modules/{moduleId}/assignments', [AssignmentController::class, 'store'])
              ->name('modules.assignments.store');
-        //Route::delete('/modules/{id}', [ModuleController::class, 'destroy'])->name('modules.destroy');
-        //Route::delete('/materials/{id}', [MaterialController::class, 'destroy'])->name('materials.destroy');
-        //Route::put('/modules/{id}', [ModuleController::class, 'update'])->name('modules.update');
-        //Route::put('/materials/{id}', [MaterialController::class, 'update'])->name('materials.update');
         Route::get('/materials/{id}/download', [MaterialController::class, 'download'])->name('materials.download');
         Route::resource('/modules', ModuleController::class);
         Route::resource('/materials', MaterialController::class);
         Route::get('/reviews', [ReviewController::class, 'index'])->name('reviews.index');
         Route::patch('/reviews/{id}', [ReviewController::class, 'update'])->name('reviews.update');
+
+        Route::get('/courses/{courseId}/students', [StudentController::class, 'index'])->name('courses.students');
     });
 
     // ── SISWA ─────────────────────────────────────────────────────────────────
     Route::middleware(['role:student'])->prefix('student')->name('student.')->group(function () {
 
         Route::get('/dashboard', [DashboardController::class, 'student'])->name('dashboard');
+
         Route::post('/enroll', [EnrollmentController::class, 'store'])->name('enroll');
+
         Route::get('/courses/{id}', [CourseController::class, 'show'])->name('courses.show');
+
         Route::get('/materials/{id}', [MaterialController::class, 'show'])->name('materials.read');
+
         Route::get('/assignments/{id}', [AssignmentController::class, 'show'])->name('assignments.show');
         Route::post('/assignments/{id}/submit', [AssignmentController::class, 'submit'])->name('assignments.submit');
     });

@@ -16,11 +16,21 @@ class ReviewController extends Controller
      */
     public function index(Request $request)
     {
-        // Assignment langsung punya course_id (bukan via module),
-        // chain yang benar: assignment.course
-        $submissions = Submission::whereHas('assignment.course', function ($q) {
+        $query = Submission::whereHas('assignment.course', function ($q) {
             $q->where('teacher_id', Auth::id());
-        })->with('student')->latest()->get();
+        })->with(['student', 'assignment']);
+
+        // Filter by student (dari halaman kelola siswa)
+        if ($request->filled('student')) {
+            $query->where('student_id', $request->student);
+        }
+
+        // Filter by course
+        if ($request->filled('course')) {
+            $query->where('course_id', $request->course);
+        }
+
+        $submissions = $query->latest()->get();
 
         $selected = null;
         if ($request->filled('submission')) {
@@ -29,9 +39,16 @@ class ReviewController extends Controller
                     $q->where('teacher_id', Auth::id());
                 })
                 ->findOrFail($request->submission);
+        } elseif ($submissions->count() > 0 && ($request->filled('student') || $request->filled('course'))) {
+            // Auto-select first if coming from student page
+            $selected = $submissions->first()->load('student');
         }
 
-        return view('teacher.reviews.index', compact('submissions', 'selected'));
+        // Context for back link
+        $filterStudent = $request->student;
+        $filterCourse  = $request->course;
+
+        return view('teacher.reviews.index', compact('submissions', 'selected', 'filterStudent', 'filterCourse'));
     }
 
     /**

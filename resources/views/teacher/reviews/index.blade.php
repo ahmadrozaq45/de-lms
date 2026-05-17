@@ -1,11 +1,19 @@
 <x-app-layout>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
+        @if(isset($filterCourse) && $filterCourse)
+        <a href="{{ route('teacher.courses.students', $filterCourse) }}"
+           class="inline-flex items-center gap-2 text-gray-500 hover:text-blue-600 font-medium text-sm mb-6 transition-colors">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+            Kembali ke Daftar Siswa
+        </a>
+        @else
         <a href="{{ route('teacher.dashboard') }}"
            class="inline-flex items-center gap-2 text-gray-500 hover:text-blue-600 font-medium text-sm mb-6 transition-colors">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
             Kembali ke Dashboard
         </a>
+        @endif
 
         @if(session('success'))
             <div class="mb-6 p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl flex items-center gap-2">
@@ -16,7 +24,14 @@
 
         <div style="margin-bottom:24px;">
             <h1 style="font-size:24px; font-weight:800; color:#1e293b; margin:0 0 4px 0;">Review Submissions</h1>
-            <p style="font-size:14px; color:#64748b; margin:0;">Review dan validasi hasil AI scoring</p>
+            <p style="font-size:14px; color:#64748b; margin:0;">
+                @if(isset($filterStudent) && $filterStudent && $submissions->first())
+                    Menampilkan tugas: <strong style="color:#1e293b;">{{ $submissions->first()->student->name ?? '' }}</strong>
+                    &nbsp;·&nbsp; {{ $submissions->count() }} pengumpulan
+                @else
+                    Review dan validasi hasil AI scoring
+                @endif
+            </p>
         </div>
 
         <div style="display:grid; grid-template-columns:340px 1fr; gap:24px; align-items:start;">

@@ -42,7 +42,12 @@
                         <svg width="18" height="18" fill="none" stroke="#64748b" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
                         <span><strong>{{ $course->modules->count() }}</strong> modul</span>
                     </div>
-                    <div style="margin-left:auto;">
+                    <div style="margin-left:auto; display:flex; gap:8px;">
+                        <a href="{{ route('teacher.courses.students', $course->id) }}"
+                           style="display:inline-flex; align-items:center; gap:6px; background:#eff6ff; color:#3b5bdb; font-size:13px; font-weight:600; padding:8px 16px; border-radius:8px; text-decoration:none;">
+                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                            Kelola Siswa
+                        </a>
                         <a href="{{ route('teacher.courses.edit', $course->id) }}"
                            style="display:inline-flex; align-items:center; gap:6px; background:#f1f5f9; color:#475569; font-size:13px; font-weight:600; padding:8px 16px; border-radius:8px; text-decoration:none;">
                             <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
@@ -258,8 +263,8 @@
                                             <input type="text" name="title" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3" placeholder="Contoh: Tugas 1: Analisis Sistem" required>
                                         </div>
                                         <div>
-                                            <label class="block text-sm font-bold text-gray-700 mb-2">Instruksi</label>
-                                            <textarea name="description" rows="4" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" placeholder="Tuliskan petunjuk pengerjaan... " required></textarea>
+                                            <label class="block text-sm font-bold text-gray-700 mb-2">Instruksi <span class="text-red-500">*</span></label>
+                                            <textarea name="description" rows="4" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" placeholder="Tuliskan petunjuk pengerjaan..." required></textarea>
                                         </div>
                                         <div class="grid grid-cols-2 gap-4">
                                             <div>

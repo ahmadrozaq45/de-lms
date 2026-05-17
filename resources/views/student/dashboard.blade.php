@@ -59,10 +59,80 @@
         </div>
     </div>
 
+    @if(session('success'))
+        <div style="margin-bottom:24px; padding:14px 20px; background:#f0fdf4; border:1px solid #bbf7d0; border-radius:12px; display:flex; align-items:center; gap:10px; color:#16a34a; font-weight:600;">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+            {{ session('success') }}
+        </div>
+    @endif
+
+    @if(session('error'))
+        <div style="margin-bottom:24px; padding:14px 20px; background:#fef2f2; border:1px solid #fecaca; border-radius:12px; display:flex; align-items:center; gap:10px; color:#dc2626; font-weight:600;">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            {{ session('error') }}
+        </div>
+    @endif
+
     <!-- My Courses Section -->
     <div class="flex justify-between items-center mb-6">
         <h2 style="font-size:24px; font-weight:800; color:#1e293b; margin:0;">Course Saya</h2>
-        <a href="#" style="color:#3b5bdb; font-weight:600; font-size:14px; text-decoration:none;">Lihat Semua</a>
+        <button onclick="document.getElementById('modal-join-course').classList.remove('hidden')"
+                style="display:inline-flex; align-items:center; gap:8px; background:#3b5bdb; color:white; font-size:14px; font-weight:700; padding:10px 20px; border-radius:10px; border:none; cursor:pointer; transition:background 0.2s;"
+                onmouseover="this.style.background='#2d45ba'" onmouseout="this.style.background='#3b5bdb'">
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Gabung Course
+        </button>
+    </div>
+
+    {{-- Modal Gabung Course --}}
+    <div id="modal-join-course" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="fixed inset-0 bg-gray-900 bg-opacity-60" onclick="document.getElementById('modal-join-course').classList.add('hidden')"></div>
+            <div class="relative bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden">
+                <form action="{{ route('student.enroll') }}" method="POST">
+                    @csrf
+                    <div style="padding:28px 32px 0;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                            <div>
+                                <h3 style="font-size:20px; font-weight:800; color:#1e293b; margin:0 0 4px 0;">Gabung Course</h3>
+                                <p style="font-size:13px; color:#64748b; margin:0;">Masukkan Course ID yang diberikan oleh guru</p>
+                            </div>
+                            <button type="button" onclick="document.getElementById('modal-join-course').classList.add('hidden')"
+                                    style="width:32px; height:32px; background:#f1f5f9; border:none; border-radius:8px; cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                <svg width="16" height="16" fill="none" stroke="#64748b" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                        </div>
+
+                        <div style="margin-bottom:20px;">
+                            <label style="display:block; font-size:13px; font-weight:700; color:#374151; margin-bottom:8px;">Course ID</label>
+                            <input type="number" name="course_id" placeholder="Contoh: 12"
+                                   style="width:100%; border:2px solid #e2e8f0; border-radius:12px; padding:14px 16px; font-size:16px; font-weight:700; color:#1e293b; outline:none; text-align:center; letter-spacing:2px; box-sizing:border-box; transition:border-color 0.2s;"
+                                   onfocus="this.style.borderColor='#3b5bdb'" onblur="this.style.borderColor='#e2e8f0'"
+                                   value="{{ old('course_id') }}" required autofocus>
+                            @error('course_id')
+                                <p style="color:#dc2626; font-size:12px; margin-top:6px;">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div style="background:#f8fafc; border-radius:10px; padding:14px 16px; margin-bottom:24px; font-size:13px; color:#64748b; line-height:1.6;">
+                            💡 Minta Course ID kepada guru atau instruktur Anda. ID bisa dilihat di URL halaman kursus mereka.
+                        </div>
+                    </div>
+
+                    <div style="padding:0 32px 28px; display:flex; gap:10px;">
+                        <button type="button" onclick="document.getElementById('modal-join-course').classList.add('hidden')"
+                                style="flex:1; padding:13px; border:1px solid #e2e8f0; border-radius:10px; background:white; font-size:14px; font-weight:600; color:#64748b; cursor:pointer;">
+                            Batal
+                        </button>
+                        <button type="submit"
+                                style="flex:2; padding:13px; background:#3b5bdb; border:none; border-radius:10px; font-size:14px; font-weight:700; color:white; cursor:pointer; transition:background 0.2s;"
+                                onmouseover="this.style.background='#2d45ba'" onmouseout="this.style.background='#3b5bdb'">
+                            Gabung Sekarang
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
     </div>
 
     <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:32px;">
@@ -107,9 +177,14 @@
             </a>
         @empty
             <div style="grid-column:1/-1; background:#fffbeb; border:1px solid #fef3c7; border-radius:16px; padding:48px; text-align:center;">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#92400e" stroke-width="1.5" style="margin:0 auto 16px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#92400e" stroke-width="1.5" style="margin:0 auto 16px;"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
                 <h3 style="font-size:18px; font-weight:700; color:#92400e; margin:0 0 4px 0;">Belum Ada Kursus</h3>
-                <p style="color:#b45309; font-size:14px; margin:0;">Anda belum terdaftar di kursus manapun. Yuk cari kursus menarik!</p>
+                <p style="color:#b45309; font-size:14px; margin:0 0 20px 0;">Anda belum terdaftar di kursus manapun. Gabung dengan Course ID dari guru!</p>
+                <button onclick="document.getElementById('modal-join-course').classList.remove('hidden')"
+                        style="display:inline-flex; align-items:center; gap:8px; background:#3b5bdb; color:white; font-size:14px; font-weight:700; padding:12px 24px; border-radius:10px; border:none; cursor:pointer;">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    Gabung Course Sekarang
+                </button>
             </div>
         @endforelse
     </div>
