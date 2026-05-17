@@ -24,7 +24,7 @@ class UserSeeder extends Seeder
 
         //TEACHER
         User::create([
-            'name' => 'PAPA ZOLA',
+            'name' => 'Sir Mail Ferguson',
             'email' => 'teacher@lms.com',
             'password' => Hash::make('password'),
             'role' => 'teacher',
