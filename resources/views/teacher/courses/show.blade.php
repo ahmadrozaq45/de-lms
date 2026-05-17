@@ -259,7 +259,7 @@
                                         </div>
                                         <div>
                                             <label class="block text-sm font-bold text-gray-700 mb-2">Instruksi</label>
-                                            <textarea name="description" rows="4" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" placeholder="Tuliskan petunjuk pengerjaan..."></textarea>
+                                            <textarea name="description" rows="4" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" placeholder="Tuliskan petunjuk pengerjaan... " required></textarea>
                                         </div>
                                         <div class="grid grid-cols-2 gap-4">
                                             <div>

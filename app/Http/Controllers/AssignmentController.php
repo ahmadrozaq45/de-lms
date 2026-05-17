@@ -14,6 +14,22 @@ class AssignmentController extends Controller
     public function __construct(private BadgeService $badgeService) {}
 
     /**
+     * Tampilkan halaman detail tugas untuk siswa.
+     * GET /student/assignments/{id}
+     */
+    public function show(int $id)
+    {
+        $assignment = Assignment::with(['module', 'course'])->findOrFail($id);
+
+        $submission = Submission::where('assignment_id', $id)
+            ->where('student_id', Auth::id())
+            ->latest()
+            ->first();
+
+        return view('student.assignment', compact('assignment', 'submission'));
+    }
+
+    /**
      * Guru membuat assignment baru.
      * POST /api/assignments
      */
@@ -88,6 +104,6 @@ class AssignmentController extends Controller
             return response()->json($submission, 201);
         }
 
-        return redirect()->back()->with('success', 'Tugas berhasil dikumpulkan!');
+        return redirect()->route('student.assignments.show', $assignmentId)->with('success', 'Tugas berhasil dikumpulkan!');
     }
 }

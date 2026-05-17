@@ -59,12 +59,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['role:student'])->prefix('student')->name('student.')->group(function () {
 
         Route::get('/dashboard', [DashboardController::class, 'student'])->name('dashboard');
-
         Route::post('/enroll', [EnrollmentController::class, 'store'])->name('enroll');
-
         Route::get('/courses/{id}', [CourseController::class, 'show'])->name('courses.show');
-
         Route::get('/materials/{id}', [MaterialController::class, 'show'])->name('materials.read');
+        Route::get('/assignments/{id}', [AssignmentController::class, 'show'])->name('assignments.show');
+        Route::post('/assignments/{id}/submit', [AssignmentController::class, 'submit'])->name('assignments.submit');
     });
 });
 
