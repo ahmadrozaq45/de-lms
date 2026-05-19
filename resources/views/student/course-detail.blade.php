@@ -64,7 +64,7 @@
                 <button class="tab-btn active" onclick="switchTab(event,'materi')">Materi</button>
                 <button class="tab-btn" onclick="switchTab(event,'diskusi')">Diskusi</button>
                 <button class="tab-btn" onclick="switchTab(event,'tugas')">Tugas</button>
-                <button class="tab-btn" onclick="switchTab(event,'ujian')">Ujian</button>
+                <button class="tab-btn" onclick="switchTab(event,'ujian')">Quiz</button>
             </div>
 
             <div id="tab-materi" class="tab-content active" style="padding:32px;">
@@ -158,9 +158,55 @@
                 @endif
             </div>
 
-            <div id="tab-ujian" class="tab-content" style="padding:32px; text-align:center;">
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" style="margin:0 auto 16px;"><polygon points="12 2 2 7 12 12 22 7 12 2"/></svg>
-                <p style="color:#64748b; font-size:15px; font-weight:500;">Jadwal ujian belum dipublikasikan oleh instruktur.</p>
+            <div id="tab-ujian" class="tab-content" style="padding:32px;">
+                @php $hasQuiz = false; @endphp
+
+                @foreach ($course->quizzes as $quiz)
+                    @php $hasQuiz = true;
+                         $lastAttempt = $quiz->attempts->where('user_id', auth()->id())->sortByDesc('id')->first();
+                    @endphp
+                    <div style="background:white; border:1px solid #e2e8f0; border-radius:12px; padding:24px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; gap:16px; transition: transform 0.2s, box-shadow 0.2s;"
+                         onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 10px 15px -3px rgba(0,0,0,0.05)'"
+                         onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+
+                        <div style="flex:1;">
+                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px; flex-wrap:wrap;">
+                                <span style="font-size:11px; font-weight:700; background:#eff3ff; color:#3b5bdb; padding:2px 10px; border-radius:4px; border:1px solid #c7d2fe;">QUIZ</span>
+                                <h4 style="font-size:18px; font-weight:700; color:#1e293b; margin:0;">{{ $quiz->title }}</h4>
+                            </div>
+                            @if($quiz->description)
+                                <p style="font-size:14px; color:#64748b; margin:0 0 12px 0; line-height:1.5;">{{ $quiz->description }}</p>
+                            @endif
+                            <div style="display:flex; flex-wrap:wrap; gap:16px; font-size:13px; color:#64748b;">
+                                <span>⏱ {{ $quiz->time_limit }} menit</span>
+                                <span>📋 {{ $quiz->questions->count() }} soal</span>
+                                <span>✅ Nilai lulus: {{ $quiz->passing_score ?? 60 }}%</span>
+                            </div>
+                        </div>
+
+                        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:10px; flex-shrink:0;">
+                            @if($lastAttempt)
+                                <div style="background:{{ $lastAttempt->is_passed ? '#f0fdf4' : '#fff7ed' }}; border:1px solid {{ $lastAttempt->is_passed ? '#bbf7d0' : '#fed7aa' }}; border-radius:8px; padding:6px 14px; text-align:center;">
+                                    <div style="font-size:18px; font-weight:800; color:{{ $lastAttempt->is_passed ? '#16a34a' : '#d97706' }};">{{ $lastAttempt->score }}%</div>
+                                    <div style="font-size:11px; font-weight:600; color:{{ $lastAttempt->is_passed ? '#15803d' : '#b45309' }};">{{ $lastAttempt->is_passed ? 'LULUS' : 'BELUM LULUS' }}</div>
+                                </div>
+                            @endif
+                            <a href="{{ route('student.quizzes.show', $quiz->id) }}"
+                               style="display:inline-flex; align-items:center; gap:8px; background:#3b5bdb; color:white; font-size:14px; font-weight:600; padding:10px 24px; border-radius:10px; text-decoration:none;"
+                               onmouseover="this.style.background='#2d45ba'" onmouseout="this.style.background='#3b5bdb'">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M5 3l14 9-14 9V3z"/></svg>
+                                {{ $lastAttempt ? 'Coba Lagi' : 'Mulai Quiz' }}
+                            </a>
+                        </div>
+                    </div>
+                @endforeach
+
+                @if(!$hasQuiz)
+                    <div style="text-align:center; padding:48px; background:#f8fafc; border-radius:12px; border:1px dashed #cbd5e1;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="margin:0 auto 16px;"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/><polyline points="9 12 11 14 15 10"/></svg>
+                        <p style="color:#475569; font-weight:500;">Belum ada quiz tersedia untuk kursus ini.</p>
+                    </div>
+                @endif
             </div>
         </div>
 
