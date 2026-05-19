@@ -26,7 +26,7 @@ class AssignmentController extends Controller
             ->latest()
             ->first();
 
-        return view('student.assignment', compact('assignment', 'submission'));
+        return view('student.assignments.show', compact('assignment', 'submission'));
     }
 
     /**

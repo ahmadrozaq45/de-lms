@@ -9,6 +9,8 @@ use App\Http\Controllers\ReviewController;
 use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\ForumController;
+use App\Http\Controllers\QuizController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -67,6 +69,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/assignments/{id}', [AssignmentController::class, 'show'])->name('assignments.show');
         Route::post('/assignments/{id}/submit', [AssignmentController::class, 'submit'])->name('assignments.submit');
+
+        Route::get('/quizzes/{id}', [QuizController::class, 'show'])->name('quizzes.show');
+        Route::post('/quizzes/{id}/attempt', [QuizController::class, 'startAttempt'])->name('quizzes.attempt');
+        Route::post('/quizzes/{id}/submit', [QuizController::class, 'submitAttempt'])->name('quizzes.submit');
     });
 });
 

@@ -61,7 +61,7 @@ class MaterialController extends Controller
                              ->with('error', 'Kamu harus daftar kelas ini dulu sebelum bisa membaca materinya!');
         }
 
-        return view('student.read-material', compact('material'));
+        return view('student.materials.read', compact('material'));
     }
 
     /**
