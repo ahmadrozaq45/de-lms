@@ -15,8 +15,8 @@ class CourseSeeder extends Seeder
     public function run(): void
     {
         Course::create([
-            'title' => 'Cara Lolos Playoff',
-            'description' => 'blablablabla',
+            'title' => 'Pemrograman Web',
+            'description' => 'Belajar dasar-dasar pemrograman web menggunakan HTML, CSS, dan JavaScript.',
             'teacher_id' => '2'
         ]);
     }

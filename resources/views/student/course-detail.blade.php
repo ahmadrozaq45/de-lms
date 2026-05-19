@@ -78,40 +78,24 @@
                         <div style="display:flex; flex-direction:column; gap:12px;">
                             {{-- Looping Daftar Materi --}}
                             @foreach ($module->materials as $material)
-                                <div class="materi-item" style="display:flex; align-items:center; gap:16px; padding:16px; border:1px solid #e2e8f0; border-radius:12px;">
-                                    <div style="width:40px; height:40px; background:#eff6ff; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-                                    </div>
-                                    <div>
-                                        <div style="font-size:15px; font-weight:600; color:#0f172a; margin-bottom:4px;">{{ $material->title }}</div>
-                                        <div style="font-size:13px; color:#64748b;">{{ Str::limit($material->content ?? 'Materi pembelajaran untuk modul ini.', 80) }}</div>
-                                    </div>
-                                    <div style="margin-left:auto;">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                                    </div>
-                                </div>
-                            @endforeach
-
-                            @foreach ($module->assignments as $assignment)
-                                <div class="materi-item" style="display:flex; align-items:center; gap:16px; padding:16px; border:1px solid #e0e7ff; border-radius:12px; border-left: 3px solid #6366f1; background-color: #fbfbfe;">
-                                    <div style="width:40px; height:40px; background:#f5f3ff; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                    </div>
-                                    <div style="flex: 1;">
-                                        <div style="font-size:15px; font-weight:700; color:#1e1b4b; margin-bottom:4px;">
-                                            <span style="font-size: 11px; background: #eeebff; color: #6366f1; padding: 1px 6px; border-radius:4px; margin-right:4px;">TUGAS</span>
-                                            {{ $assignment->title }}
+                                <a href="{{ route('student.materials.read', $material->id) }}" style="text-decoration:none;">
+                                    <div class="materi-item" style="display:flex; align-items:center; gap:16px; padding:16px; border:1px solid #e2e8f0; border-radius:12px; cursor:pointer;">
+                                        <div style="width:40px; height:40px; background:#eff6ff; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#3b5bdb" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
                                         </div>
-                                        <div style="font-size:13px; color:#64748b;">
-                                            Tenggat: <span style="color:#ef4444; font-weight:600;">{{ \Carbon\Carbon::parse($assignment->due_date)->format('d M Y, H:i') }}</span>
+                                        <div>
+                                            <div style="font-size:15px; font-weight:600; color:#0f172a; margin-bottom:4px;">{{ $material->title }}</div>
+                                            <div style="font-size:13px; color:#64748b;">{{ Str::limit($material->content ?? 'Materi pembelajaran untuk modul ini.', 80) }}</div>
                                         </div>
                                     </div>
-                                    <div style="margin-left:auto;">
-                                        <a href="#" style="font-size:13px; font-weight:700; color:#3b5bdb; text-decoration:none;">Buka &rarr;</a>
-                                    </div>
-                                </div>
+                                </a>
                             @endforeach
 
+                            @if($module->materials->isEmpty())
+                                <div style="text-align:center; padding:24px; color:#94a3b8; font-size:14px;">
+                                    Belum ada materi di modul ini.
+                                </div>
+                            @endif
                         </div>
                     </div>
                 @empty
@@ -155,7 +139,7 @@
                                 <span style="background:#fffbeb; color:#d97706; font-size:12px; font-weight:700; padding:6px 16px; border-radius:8px; border:1px solid #fef3c7;">
                                     Due: {{ \Carbon\Carbon::parse($assignment->due_date)->format('d M Y, H:i') }}
                                 </span>
-                                <a href="#" 
+                                <a href="{{ route('student.assignments.show', $assignment->id) }}" 
                                    style="display:inline-flex; align-items:center; gap:8px; background:#3b5bdb; color:white; font-size:14px; font-weight:600; padding:10px 24px; border-radius:10px; text-decoration:none; transition: background 0.2s;"
                                    onmouseover="this.style.background='#2d45ba'" onmouseout="this.style.background='#3b5bdb'">
                                     <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M5 3l14 9-14 9V3z"/></svg>

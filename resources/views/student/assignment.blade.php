@@ -1,16 +1,4 @@
 <x-app-layout>
-    <style>
-        .answer-type-btn {
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            gap: 8px; padding: 16px 20px; border: 2px solid #e2e8f0; border-radius: 12px;
-            background: white; cursor: pointer; font-size: 14px; font-weight: 600; color: #64748b;
-            transition: all 0.2s ease; min-width: 100px;
-        }
-        .answer-type-btn:hover { border-color: #3b5bdb; color: #3b5bdb; background: #f0f4ff; }
-        .answer-type-btn.active { border-color: #3b5bdb; color: #3b5bdb; background: #eff3ff; }
-        .answer-section { display: none; }
-        .answer-section.active { display: block; }
-    </style>
 
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
@@ -157,61 +145,24 @@
             <form action="{{ route('student.assignments.submit', $assignment->id) }}" method="POST" enctype="multipart/form-data">
                 @csrf
 
-                <div style="margin-bottom:20px;">
-                    <label style="display:block; font-size:14px; font-weight:700; color:#374151; margin-bottom:12px;">Pilih Tipe Jawaban</label>
-                    <div style="display:flex; gap:12px; flex-wrap:wrap;">
-                        <button type="button" class="answer-type-btn active" onclick="switchType('text')">
-                            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-                            Text
-                        </button>
-                        <button type="button" class="answer-type-btn" onclick="switchType('audio')">
-                            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="23"/><line x1="8" y1="23" x2="16" y2="23"/></svg>
-                            Audio
-                        </button>
-                        <button type="button" class="answer-type-btn" onclick="switchType('foto')">
-                            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                            Foto
-                        </button>
-                        <button type="button" class="answer-type-btn" onclick="switchType('video')">
-                            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-                            Video
-                        </button>
-                    </div>
-                </div>
-
                 {{-- Text Answer --}}
-                <div id="section-text" class="answer-section active">
+                <div style="margin-bottom:20px;">
                     <label style="display:block; font-size:14px; font-weight:700; color:#374151; margin-bottom:8px;">Jawaban Text</label>
-                    <textarea name="answer" rows="8" style="width:100%; border:1px solid #e2e8f0; border-radius:12px; padding:16px; font-size:15px; color:#1e293b; resize:vertical; outline:none; transition:border-color 0.2s;" placeholder="Tulis jawaban Anda di sini..." onfocus="this.style.borderColor='#3b5bdb'" onblur="this.style.borderColor='#e2e8f0'">{{ old('answer') }}</textarea>
+                    <textarea name="answer" rows="8" style="width:100%; border:1px solid #e2e8f0; border-radius:12px; padding:16px; font-size:15px; color:#1e293b; resize:vertical; outline:none; transition:border-color 0.2s; box-sizing:border-box;" placeholder="Tulis jawaban Anda di sini..." onfocus="this.style.borderColor='#3b5bdb'" onblur="this.style.borderColor='#e2e8f0'">{{ old('answer') }}</textarea>
                 </div>
 
-                {{-- Audio Answer --}}
-                <div id="section-audio" class="answer-section">
-                    <label style="display:block; font-size:14px; font-weight:700; color:#374151; margin-bottom:8px;">Upload File Audio</label>
-                    <div style="border:2px dashed #e2e8f0; border-radius:12px; padding:32px; text-align:center; background:#f8fafc;">
-                        <svg width="40" height="40" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 12px;"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/></svg>
-                        <p style="color:#64748b; font-size:14px; margin:0 0 12px 0;">Pilih file audio (MP3, WAV, M4A)</p>
-                        <input type="file" name="file_path" accept=".mp3,.wav,.m4a,.ogg" style="font-size:14px; color:#64748b;">
-                    </div>
-                </div>
-
-                {{-- Foto Answer --}}
-                <div id="section-foto" class="answer-section">
-                    <label style="display:block; font-size:14px; font-weight:700; color:#374151; margin-bottom:8px;">Upload Foto</label>
-                    <div style="border:2px dashed #e2e8f0; border-radius:12px; padding:32px; text-align:center; background:#f8fafc;">
-                        <svg width="40" height="40" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 12px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
-                        <p style="color:#64748b; font-size:14px; margin:0 0 12px 0;">Pilih file gambar (JPG, PNG, JPEG)</p>
-                        <input type="file" name="file_path" accept=".jpg,.jpeg,.png,.gif,.webp" style="font-size:14px; color:#64748b;">
-                    </div>
-                </div>
-
-                {{-- Video Answer --}}
-                <div id="section-video" class="answer-section">
-                    <label style="display:block; font-size:14px; font-weight:700; color:#374151; margin-bottom:8px;">Upload Video</label>
-                    <div style="border:2px dashed #e2e8f0; border-radius:12px; padding:32px; text-align:center; background:#f8fafc;">
-                        <svg width="40" height="40" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 12px;"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
-                        <p style="color:#64748b; font-size:14px; margin:0 0 12px 0;">Pilih file video (MP4, MOV, MKV)</p>
-                        <input type="file" name="file_path" accept=".mp4,.mov,.mkv,.avi,.webm" style="font-size:14px; color:#64748b;">
+                {{-- File Submission --}}
+                <div style="margin-bottom:20px;">
+                    <label style="display:block; font-size:14px; font-weight:700; color:#374151; margin-bottom:8px;">Lampiran File <span style="font-weight:400; color:#94a3b8;">(opsional)</span></label>
+                    <div style="border:2px dashed #e2e8f0; border-radius:12px; padding:28px; text-align:center; background:#f8fafc; transition:border-color 0.2s;" 
+                         ondragover="this.style.borderColor='#3b5bdb'" ondragleave="this.style.borderColor='#e2e8f0'">
+                        <svg width="36" height="36" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 10px; display:block;">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="17 8 12 3 7 8"/>
+                            <line x1="12" y1="3" x2="12" y2="15"/>
+                        </svg>
+                        <p style="color:#64748b; font-size:14px; margin:0 0 12px 0;">Upload file pendukung (PDF, DOC, ZIP, gambar, video, dll)</p>
+                        <input type="file" name="file_path" style="font-size:14px; color:#64748b;">
                     </div>
                 </div>
 
@@ -248,12 +199,5 @@
 
     </div>
 
-    <script>
-        function switchType(type) {
-            document.querySelectorAll('.answer-type-btn').forEach(b => b.classList.remove('active'));
-            document.querySelectorAll('.answer-section').forEach(s => s.classList.remove('active'));
-            event.currentTarget.classList.add('active');
-            document.getElementById('section-' + type).classList.add('active');
-        }
-    </script>
+
 </x-app-layout>
