@@ -89,7 +89,7 @@ class CourseController extends Controller
             ->where('course_id', $id)
             ->exists();
 
-        return view('student.course-detail', compact('course', 'isEnrolled'));
+        return view('student.courses.show', compact('course', 'isEnrolled'));
     }
 
     /**

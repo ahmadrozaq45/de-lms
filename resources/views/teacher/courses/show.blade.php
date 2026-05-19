@@ -65,7 +65,7 @@
                 <button class="tab-btn active" onclick="switchTab(event,'materi')">Materi</button>
                 <button class="tab-btn" onclick="switchTab(event,'diskusi')">Diskusi</button>
                 <button class="tab-btn" onclick="switchTab(event,'tugas')">Tugas</button>
-                <button class="tab-btn" onclick="switchTab(event,'ujian')">Ujian</button>
+                <button class="tab-btn" onclick="switchTab(event,'quiz')">Quiz</button>
             </div>
 
             {{-- TAB MATERI --}}
@@ -379,16 +379,16 @@
                 @endif
             </div>
 
-            {{-- TAB UJIAN --}}
-            <div id="tab-ujian" class="tab-content" style="padding:32px;">
+            {{-- TAB QUIZ --}}
+            <div id="tab-quiz" class="tab-content" style="padding:32px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
-                    <h2 style="font-size:18px; font-weight:700; color:#1e293b; margin:0;">Ujian</h2>
+                    <h2 style="font-size:18px; font-weight:700; color:#1e293b; margin:0;">Quiz</h2>
                     <span style="font-size:12px; background:#f1f5f9; color:#64748b; padding:6px 14px; border-radius:20px; font-weight:600;">Segera Hadir</span>
                 </div>
                 <div style="text-align:center; padding:48px; background:#f8fafc; border-radius:12px; border:1px dashed #cbd5e1;">
                     <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" style="margin:0 auto 16px;"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-                    <p style="color:#64748b; font-size:15px; font-weight:500; margin:0 0 8px;">Fitur ujian belum tersedia.</p>
-                    <p style="color:#94a3b8; font-size:13px; margin:0;">Anda akan dapat membuat soal ujian dan melihat hasilnya di sini.</p>
+                    <p style="color:#64748b; font-size:15px; font-weight:500; margin:0 0 8px;">Fitur quiz belum tersedia.</p>
+                    <p style="color:#94a3b8; font-size:13px; margin:0;">Anda akan dapat membuat soal quiz dan melihat hasilnya di sini.</p>
                 </div>
             </div>
 
