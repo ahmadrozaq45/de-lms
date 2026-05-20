@@ -65,7 +65,7 @@
                 <button class="tab-btn active" onclick="switchTab(event,'materi')">Materi</button>
                 <button class="tab-btn" onclick="switchTab(event,'diskusi')">Diskusi</button>
                 <button class="tab-btn" onclick="switchTab(event,'tugas')">Tugas</button>
-                <button class="tab-btn" onclick="switchTab(event,'quiz')">Quiz</button>
+                <button class="tab-btn" onclick="switchTab(event,'ujian')">Ujian</button>
             </div>
 
             {{-- TAB MATERI --}}
@@ -379,17 +379,59 @@
                 @endif
             </div>
 
-            {{-- TAB QUIZ --}}
-            <div id="tab-quiz" class="tab-content" style="padding:32px;">
+            {{-- TAB UJIAN --}}
+            <div id="tab-ujian" class="tab-content" style="padding:32px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
-                    <h2 style="font-size:18px; font-weight:700; color:#1e293b; margin:0;">Quiz</h2>
-                    <span style="font-size:12px; background:#f1f5f9; color:#64748b; padding:6px 14px; border-radius:20px; font-weight:600;">Segera Hadir</span>
+                    <h2 style="font-size:18px; font-weight:700; color:#1e293b; margin:0;">
+                        Daftar Quiz
+                        <span style="font-size:14px; font-weight:500; color:#94a3b8; margin-left:8px;">{{ $course->quizzes->count() }} quiz</span>
+                    </h2>
+                    <a href="{{ route('teacher.courses.quizzes.create', $course->id) }}"
+                       style="display:inline-flex; align-items:center; gap:6px; background:#3b5bdb; color:white; font-size:14px; font-weight:600; padding:10px 20px; border-radius:10px; text-decoration:none;">
+                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                        Buat Quiz
+                    </a>
                 </div>
-                <div style="text-align:center; padding:48px; background:#f8fafc; border-radius:12px; border:1px dashed #cbd5e1;">
-                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" style="margin:0 auto 16px;"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
-                    <p style="color:#64748b; font-size:15px; font-weight:500; margin:0 0 8px;">Fitur quiz belum tersedia.</p>
-                    <p style="color:#94a3b8; font-size:13px; margin:0;">Anda akan dapat membuat soal quiz dan melihat hasilnya di sini.</p>
-                </div>
+
+                @forelse($course->quizzes as $quiz)
+                    <div style="background:white; border:1px solid #e2e8f0; border-radius:12px; padding:20px 24px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; gap:16px; transition:box-shadow .2s;"
+                         onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.06)'"
+                         onmouseout="this.style.boxShadow='none'">
+                        <div style="flex:1;">
+                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+                                <span style="font-size:10px; font-weight:700; background:#eff3ff; color:#3b5bdb; padding:2px 8px; border-radius:4px; border:1px solid #c7d2fe;">QUIZ</span>
+                                <h4 style="font-size:16px; font-weight:700; color:#1e293b; margin:0;">{{ $quiz->title }}</h4>
+                            </div>
+                            <div style="display:flex; flex-wrap:wrap; gap:14px; font-size:13px; color:#64748b;">
+                                <span>⏱ {{ $quiz->time_limit }} menit</span>
+                                <span>📋 {{ $quiz->questions->count() }} soal</span>
+                                <span>✅ Lulus: {{ $quiz->passing_score }}%</span>
+                                <span>👥 {{ $quiz->attempts->count() }} attempt</span>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:8px; flex-shrink:0;">
+                            <a href="{{ route('teacher.quizzes.results', $quiz->id) }}"
+                               style="display:inline-flex; align-items:center; gap:5px; background:#dcfce7; color:#16a34a; font-size:12px; font-weight:700; padding:7px 14px; border-radius:8px; text-decoration:none;">
+                                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                                Hasil
+                            </a>
+                            <a href="{{ route('teacher.quizzes.show', $quiz->id) }}"
+                               style="display:inline-flex; align-items:center; gap:5px; background:#eff3ff; color:#3b5bdb; font-size:12px; font-weight:700; padding:7px 14px; border-radius:8px; text-decoration:none;">
+                                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                Kelola Soal
+                            </a>
+                        </div>
+                    </div>
+                @empty
+                    <div style="text-align:center; padding:48px; background:#f8fafc; border-radius:12px; border:1px dashed #cbd5e1;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="margin:0 auto 16px;"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                        <p style="color:#64748b; font-weight:500; margin:0 0 12px;">Belum ada quiz di kursus ini.</p>
+                        <a href="{{ route('teacher.courses.quizzes.create', $course->id) }}"
+                           style="display:inline-flex; align-items:center; gap:6px; background:#3b5bdb; color:white; font-size:14px; font-weight:600; padding:10px 20px; border-radius:10px; text-decoration:none;">
+                            + Buat Quiz Pertama
+                        </a>
+                    </div>
+                @endforelse
             </div>
 
         </div>

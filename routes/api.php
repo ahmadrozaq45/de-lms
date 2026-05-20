@@ -40,8 +40,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/enroll', [EnrollmentController::class, 'store']);
         Route::post('/assignments/{id}/submit', [AssignmentController::class, 'submit']);
 
-        Route::post('/quizzes/{id}/attempt', [QuizController::class, 'startAttempt']);
-        Route::post('/quizzes/save-answer', [QuizController::class, 'saveAnswer']);
+        Route::post('/quizzes/{id}/attempt',              [QuizController::class, 'startAttempt']);
+        Route::post('/quiz-attempts/{id}/submit',         [QuizController::class, 'submitAttempt']);
+        Route::post('/quizzes/save-answer',               [QuizController::class, 'saveAnswer']); // @deprecated
     });
 
     // --- 4. FORUM (semua role) ---
