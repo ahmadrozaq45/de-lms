@@ -2,74 +2,97 @@
     <x-slot name="header">
         <div class="flex justify-between items-center">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Daftar Kursus Saya
+                {{ __('Daftar Kursus Saya') }}
             </h2>
-            <a href="{{ route('teacher.courses.create') }}" class="inline-flex items-center px-4 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700 transition ease-in-out duration-150">
-                + Tambah Kursus
+            <a href="{{ route('teacher.courses.create') }}" 
+               class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-5 py-2.5 rounded-xl shadow-md shadow-indigo-100 transition flex items-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path>
+                </svg>
+                Tambah Kursus
             </a>
         </div>
     </x-slot>
 
-    <div class="py-12">
+    <div class="py-12 bg-gray-50 min-h-screen">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-
+            
             @if(session('success'))
-                <div class="mb-4 p-4 bg-green-100 border border-green-400 text-green-700 rounded shadow-sm">
-                    {{ session('success') }}
+                <div class="mb-8 p-4 bg-green-50 border border-green-200 text-green-700 rounded-xl shadow-sm flex items-center gap-2">
+                    <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <span class="font-medium">{{ session('success') }}</span>
                 </div>
             @endif
 
-            <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                <div class="p-6 text-gray-900">
-                    <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200">
-                            <thead class="bg-gray-50">
-                                <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Judul Kursus</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Jumlah Modul</th>
-                                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tanggal Dibuat</th>
-                                    <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody class="bg-white divide-y divide-gray-200">
-                                @forelse($courses as $course)
-                                    <tr class="hover:bg-gray-50 transition">
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900">{{ $course->title }}</div>
-                                            <div class="text-sm text-gray-500">{{ Str::limit($course->description, 50) }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                                                {{ $course->modules->count() }} Modul
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                            {{ $course->created_at->format('d M Y') }}
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                                            <a href="{{ route('teacher.courses.show', $course->id) }}" class="text-indigo-600 hover:text-indigo-900 bg-indigo-50 px-3 py-1 rounded">Kelola</a>
-                                            <a href="{{ route('teacher.courses.edit', $course->id) }}" class="text-yellow-600 hover:text-yellow-900 bg-yellow-50 px-3 py-1 rounded">Edit</a>
-                                            <form action="{{ route('teacher.courses.destroy', $course->id) }}" method="POST" class="inline">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" onclick="return confirm('Yakin ingin menghapus kursus ini?')" class="text-red-600 hover:text-red-900 bg-red-50 px-3 py-1 rounded">
-                                                    Hapus
-                                                </button>
-                                            </form>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="4" class="px-6 py-10 text-center text-gray-500">
-                                            Belum ada kursus yang dibuat. <a href="{{ route('teacher.courses.create') }}" class="text-indigo-600 underline">Buat sekarang</a>.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                @forelse($courses as $course)
+                    <div class="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-200 flex flex-col justify-between overflow-hidden">
+                        
+                        <div class="p-6 flex-1">
+                            <div class="w-12 h-12 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center mb-4">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
+                                </svg>
+                            </div>
+
+                            <h3 class="text-lg font-bold text-gray-900 mb-1 line-clamp-1">
+                                {{ $course->title }}
+                            </h3>
+                            
+                            <p class="text-sm text-gray-500 mb-4 h-10 line-clamp-2">
+                                {{ $course->description ?? 'Belum ada deskripsi untuk kursus ini.' }}
+                            </p>
+
+                            <div class="flex flex-wrap items-center gap-3 text-xs border-t border-gray-100 pt-4 mt-2">
+                                <span class="bg-blue-50 text-blue-600 font-bold px-2.5 py-1 rounded-md">
+                                    {{ $course->modules->count() }} Modul
+                                </span>
+                                <span class="text-gray-400 font-medium">
+                                    Dibuat: {{ \Carbon\Carbon::parse($course->created_at)->format('d M Y') }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex flex-row items-center justify-between gap-2">
+                            <a href="{{ route('teacher.courses.show', $course->id) }}" 
+                            class="flex-1 text-center bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2.5 rounded-lg transition-colors shadow-sm">
+                                Kelola
+                            </a>
+                            
+                            <a href="{{ route('teacher.courses.edit', $course->id) }}" 
+                            style="background-color: #f59e0b;"
+                            class="flex-1 text-center hover:opacity-90 text-white text-xs font-bold py-2.5 rounded-lg transition-colors shadow-sm">
+                                Edit
+                            </a>
+                            
+                            <form action="{{ route('teacher.courses.destroy', $course->id) }}" method="POST" 
+                                class="flex-1"
+                                onsubmit="return confirm('Apakah Anda yakin ingin menghapus kursus ini beserta seluruh modulnya?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" 
+                                        style="background-color: #ef4444;"
+                                        class="w-full hover:opacity-90 text-white text-xs font-bold py-2.5 rounded-lg transition-colors shadow-sm">
+                                    Hapus
+                                </button>
+                            </form>
+                        </div>
+
                     </div>
-                </div>
-            </div>
+                @empty
+                    <div class="col-span-full bg-white rounded-2xl border border-dashed border-gray-300 p-12 text-center">
+                        <svg class="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
+                        </svg>
+                        <h4 class="text-base font-bold text-gray-700 mb-1">Belum Ada Kursus</h4>
+                        <p class="text-sm text-gray-400 mb-4">Anda belum membuat kursus pengajaran apa pun saat ini.</p>
+                    </div>
+                @endforelse
+
+            </div> {{-- Akhir Grid --}}
 
         </div>
     </div>

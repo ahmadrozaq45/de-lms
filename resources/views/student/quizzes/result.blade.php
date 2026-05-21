@@ -90,12 +90,8 @@
                                     {{ $answer->answer_text ?: '(tidak dijawab)' }}
                                 </span>
                             </div>
-                            @if(!$answer->is_correct)
-                                <div style="display:flex; align-items:center; gap:6px;">
-                                    <span style="color:#64748b;">Jawaban benar:</span>
-                                    <span style="font-weight:700; color:#16a34a;">{{ $answer->question->correct_answer }}</span>
-                                </div>
-                            @endif
+                            
+                            {{-- 🚀 BARIS JAWABAN BENAR SUDAH DIHAPUS DARI SINI AGAR RAHASIA --}}
                         </div>
                     </div>
                 </div>
