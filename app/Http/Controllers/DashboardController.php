@@ -7,14 +7,11 @@ use App\Models\{
     QuizAttempt, MaterialProgress, Material, User,
     AiAnalysis, Quiz
 };
-use App\Services\BadgeService;
 use Illuminate\Http\{Request, JsonResponse};
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
-    public function __construct(private BadgeService $badgeService) {}
-
     /**
      * Redirect ke dashboard sesuai role.
      */
@@ -107,14 +104,6 @@ class DashboardController extends Controller
                 'passing_score'=> $a->quiz->passing_score,
                 'completed_at' => $a->completed_at,
             ]);
-
-        // Badge
-        $badges = $user->badges()->orderByPivot('earned_at', 'desc')->get()->map(fn($b) => [
-            'name'     => $b->name,
-            'icon'     => $b->icon,
-            'earned_at'=> $b->pivot->earned_at,
-        ]);
-
         // AI rekomendasi terbaru (semua kursus)
         $aiRecommendations = AiAnalysis::where('user_id', $user->id)
             ->with('course')
@@ -136,9 +125,7 @@ class DashboardController extends Controller
             'stats'            => [
                 'total_courses'   => count($courseProgress),
                 'overall_progress'=> $overallProgress,
-                'total_badges'    => $badges->count(),
             ],
-            'badges'           => $badges,
             'course_progress'  => $courseProgress,
             'recent_assessment'=> $recentAttempts,
             'failed_quizzes'   => $failedQuizzes,
@@ -337,15 +324,11 @@ class DashboardController extends Controller
         // Hitung Progress Keseluruhan (%)
         $overallProgress = $totalMaterials > 0 ? round(($completedMaterials / $totalMaterials) * 100) : 0;
 
-        // Hitung Total Badge
-        $totalBadges = $user->badges()->count();
-
         return view('student.dashboard', compact(
             'user',
             'enrolledCourses',
             'overallProgress',
             'avgGrade',
-            'totalBadges'
         ));
     }
 }

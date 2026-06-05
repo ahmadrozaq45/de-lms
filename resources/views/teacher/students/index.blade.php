@@ -13,21 +13,21 @@
                 <h1 style="font-size:24px; font-weight:800; color:#1e293b; margin:0 0 4px 0;">Kelola Siswa</h1>
                 <p style="font-size:14px; color:#64748b; margin:0;">
                     Course: <strong style="color:#3b5bdb;">{{ $course->title }}</strong>
-                    &nbsp;·&nbsp; Course ID: <strong style="background:#eff6ff; color:#3b5bdb; padding:2px 8px; border-radius:6px; font-size:13px;">{{ $course->id }}</strong>
+                    &nbsp;·&nbsp; Course ID: <strong style="background:#eff6ff; color:#3b5bdb; padding:2px 8px; border-radius:6px; font-size:13px;">{{ $course->course_code }}</strong>
                 </p>
             </div>
             {{-- Share Course ID Box --}}
             <div style="background:#f0f4ff; border:1px solid #c7d2fe; border-radius:12px; padding:14px 20px; display:flex; align-items:center; gap:16px;">
                 <div>
                     <div style="font-size:11px; font-weight:700; color:#6366f1; text-transform:uppercase; margin-bottom:2px;">Bagikan ke Siswa</div>
-                    <div style="font-size:22px; font-weight:800; color:#3730a3; letter-spacing:4px;">{{ $course->id }}</div>
+                    <div style="font-size:22px; font-weight:800; color:#3730a3; letter-spacing:4px;">{{ $course->course_code }}</div>
                 </div>
-                <button onclick="copyId({{ $course->id }})"
+                <button onclick="copyCourseCode('{{ $course->course_code }}')"
                         id="copy-btn"
                         style="display:flex; align-items:center; gap:6px; background:#6366f1; color:white; border:none; border-radius:8px; padding:8px 14px; font-size:12px; font-weight:700; cursor:pointer; transition:background 0.2s; white-space:nowrap;"
                         onmouseover="this.style.background='#4f46e5'" onmouseout="this.style.background='#6366f1'">
                     <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                    Salin ID
+                    Salin Kode
                 </button>
             </div>
         </div>
@@ -139,13 +139,13 @@
     </div>
 
     <script>
-        function copyId(id) {
-            navigator.clipboard.writeText(id.toString()).then(() => {
+        function copyCourseCode(courseCode) {
+            navigator.clipboard.writeText(courseCode).then(() => {
                 const btn = document.getElementById('copy-btn');
                 btn.textContent = '✓ Tersalin!';
                 btn.style.background = '#16a34a';
                 setTimeout(() => {
-                    btn.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Salin ID';
+                    btn.innerHTML = '<svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Salin Kode';
                     btn.style.background = '#6366f1';
                 }, 2000);
             });

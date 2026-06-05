@@ -104,12 +104,12 @@
                         </div>
 
                         <div style="margin-bottom:20px;">
-                            <label style="display:block; font-size:13px; font-weight:700; color:#374151; margin-bottom:8px;">Course ID</label>
-                            <input type="number" name="course_id" placeholder="Contoh: 12"
+                            <label style="display:block; font-size:13px; font-weight:700; color:#374151; margin-bottom:8px;">Kode Course</label>
+                            <input type="string" name="course_code" placeholder="Contoh: 12"
                                    style="width:100%; border:2px solid #e2e8f0; border-radius:12px; padding:14px 16px; font-size:16px; font-weight:700; color:#1e293b; outline:none; text-align:center; letter-spacing:2px; box-sizing:border-box; transition:border-color 0.2s;"
                                    onfocus="this.style.borderColor='#3b5bdb'" onblur="this.style.borderColor='#e2e8f0'"
-                                   value="{{ old('course_id') }}" required autofocus>
-                            @error('course_id')
+                                   value="{{ old('course_code') }}" required autofocus>
+                            @error('course_code')
                                 <p style="color:#dc2626; font-size:12px; margin-top:6px;">{{ $message }}</p>
                             @enderror
                         </div>

@@ -63,9 +63,9 @@
 
             <div style="display:flex; border-bottom:1px solid #e2e8f0; background:#f8fafc; padding:0 16px;">
                 <button class="tab-btn active" onclick="switchTab(event,'materi')">Materi</button>
-                <button class="tab-btn" onclick="switchTab(event,'diskusi')">Diskusi</button>
+                <!-- <button class="tab-btn" onclick="switchTab(event,'diskusi')">Diskusi</button> -->
                 <button class="tab-btn" onclick="switchTab(event,'tugas')">Tugas</button>
-                <button class="tab-btn" onclick="switchTab(event,'ujian')">Ujian</button>
+                <button class="tab-btn" onclick="switchTab(event,'quiz')">Quiz</button>
             </div>
 
             {{-- TAB MATERI --}}
@@ -326,19 +326,6 @@
                 @endforelse
             </div>
 
-            {{-- TAB DISKUSI --}}
-            <div id="tab-diskusi" class="tab-content" style="padding:32px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
-                    <h2 style="font-size:18px; font-weight:700; color:#1e293b; margin:0;">Forum Diskusi</h2>
-                    <span style="font-size:12px; background:#f1f5f9; color:#64748b; padding:6px 14px; border-radius:20px; font-weight:600;">Segera Hadir</span>
-                </div>
-                <div style="text-align:center; padding:48px; background:#f8fafc; border-radius:12px; border:1px dashed #cbd5e1;">
-                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" style="margin:0 auto 16px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                    <p style="color:#64748b; font-size:15px; font-weight:500; margin:0 0 8px;">Forum diskusi akan segera tersedia.</p>
-                    <p style="color:#94a3b8; font-size:13px; margin:0;">Anda dapat memantau dan membalas pertanyaan siswa dari sini.</p>
-                </div>
-            </div>
-
             {{-- TAB TUGAS --}}
             <div id="tab-tugas" class="tab-content" style="padding:32px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
@@ -379,8 +366,8 @@
                 @endif
             </div>
 
-            {{-- TAB UJIAN --}}
-            <div id="tab-ujian" class="tab-content" style="padding:32px;">
+            {{-- TAB QUIZ --}}
+            <div id="tab-quiz" class="tab-content" style="padding:32px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
                     <h2 style="font-size:18px; font-weight:700; color:#1e293b; margin:0;">
                         Daftar Quiz
