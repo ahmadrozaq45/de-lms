@@ -10,6 +10,9 @@ use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\QuizController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SettingController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -30,12 +33,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ── ADMIN ────────────────────────────────────────────────────────────────
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'admin'])->name('dashboard');
+        Route::resource('users', UserController::class)->except(['show']);
+        Route::get('/report', [ReportController::class, 'admin'])->name('report');
     });
+
+    // ── SETTINGS (semua role) ─────────────────────────────────────────────
+    Route::get('/settings',          [SettingController::class, 'index'])->name('settings.index');
+    Route::patch('/settings/profile', [SettingController::class, 'updateProfile'])->name('settings.profile');
+    Route::patch('/settings/password',[SettingController::class, 'updatePassword'])->name('settings.password');
+    Route::delete('/settings/account',[SettingController::class, 'deleteAccount'])->name('settings.delete');
 
     // ── GURU ─────────────────────────────────────────────────────────────────
     Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
 
         Route::get('/dashboard', [DashboardController::class, 'teacher'])->name('dashboard');
+        Route::get('/report',    [ReportController::class, 'teacher'])->name('report');
 
         Route::resource('courses', CourseController::class)
              ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
@@ -90,7 +102,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['role:student'])->prefix('student')->name('student.')->group(function () {
 
         Route::get('/dashboard', [DashboardController::class, 'student'])->name('dashboard');
-
+        Route::get('/report',    [ReportController::class, 'student'])->name('report');
         Route::post('/enroll', [EnrollmentController::class, 'store'])->name('enroll');
 
         Route::get('/courses/{id}',                  [CourseController::class, 'show'])
