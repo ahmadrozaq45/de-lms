@@ -36,7 +36,22 @@
             </div>
             <div style="padding:28px 32px;">
                 <h1 style="font-size:28px; font-weight:800; color:#0f172a; margin:0 0 8px 0;">{{ $course->title }}</h1>
-                <p style="font-size:15px; color:#475569; margin:0 0 20px 0; line-height:1.6;">{{ $course->description }}</p>
+                <p style="font-size:15px; color:#475569; margin:0 0 16px 0; line-height:1.6;">{{ $course->description }}</p>
+
+                {{-- Course Code Banner --}}
+                <div style="display:inline-flex; align-items:center; gap:14px; background:#eef2ff; border:1px solid #c7d2fe; border-radius:12px; padding:12px 18px; margin-bottom:16px;">
+                    <div>
+                        <div style="font-size:11px; font-weight:700; color:#6366f1; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:2px;">Kode Kelas</div>
+                        <div style="font-family:monospace; font-size:22px; font-weight:800; color:#3730a3; letter-spacing:5px;">{{ $course->course_code }}</div>
+                    </div>
+                    <button onclick="copyCourseCode('{{ $course->course_code }}')" id="copy-btn-show"
+                            style="display:flex; align-items:center; gap:6px; background:#6366f1; color:white; border:none; border-radius:8px; padding:8px 14px; font-size:12px; font-weight:700; cursor:pointer; transition:background 0.2s; white-space:nowrap;"
+                            onmouseover="this.style.background='#4f46e5'" onmouseout="this.style.background='#6366f1'">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        Salin Kode
+                    </button>
+                </div>
+
                 <div style="display:flex; flex-wrap:wrap; align-items:center; gap:24px; font-size:14px; color:#475569; border-top:1px solid #f1f5f9; padding-top:16px;">
                     <div style="display:flex; align-items:center; gap:8px;">
                         <svg width="18" height="18" fill="none" stroke="#64748b" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
@@ -497,6 +512,18 @@
                         .then(editor => { editors['edit-' + materialId] = editor; });
                 }
             } else { c.classList.add('hidden'); f.classList.remove('hidden'); }
+        }
+
+        function copyCourseCode(code) {
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = document.getElementById('copy-btn-show');
+                btn.textContent = '✓ Tersalin!';
+                btn.style.background = '#16a34a';
+                setTimeout(() => {
+                    btn.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Salin Kode';
+                    btn.style.background = '#6366f1';
+                }, 2000);
+            });
         }
     </script>
 </x-app-layout>

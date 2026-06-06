@@ -57,6 +57,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('/reviews/{id}',  [ReviewController::class, 'update'])->name('reviews.update');
         Route::get('/courses/{courseId}/students', [StudentController::class, 'index'])
              ->name('courses.students');
+        Route::post('/courses/{courseId}/students/{enrollmentId}/approve', [StudentController::class, 'approve'])
+             ->name('courses.students.approve');
+        Route::delete('/courses/{courseId}/students/{enrollmentId}', [StudentController::class, 'destroy'])
+             ->name('courses.students.destroy');
 
         // ── Quiz (Guru) ──────────────────────────────────────────────────────
         // Buat quiz baru untuk sebuah kursus

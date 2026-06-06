@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class CourseEnrollment extends Model
 {
-    protected $fillable = ['user_id', 'course_id'];
+    protected $fillable = ['user_id', 'course_id','status'];
 
     public function user(): BelongsTo
     {
@@ -17,5 +17,15 @@ class CourseEnrollment extends Model
     public function course(): BelongsTo
     {
         return $this->belongsTo(Course::class);
+    }
+
+    public function isPending(): bool
+    {
+        return $this->status === 'pending';
+    }
+
+    public function isApproved(): bool
+    {
+        return $this->status === 'approved';
     }
 }

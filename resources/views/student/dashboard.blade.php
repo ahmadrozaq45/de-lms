@@ -73,6 +73,27 @@
         </div>
     @endif
 
+    <!-- Pending Enrollments Section -->
+    @if(isset($pendingEnrollments) && $pendingEnrollments->count() > 0)
+    <div style="margin-bottom:28px;">
+        <div style="background:#fffbeb; border:1px solid #fde68a; border-radius:14px; padding:18px 22px;">
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:14px;">
+                <svg width="18" height="18" fill="none" stroke="#d97706" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span style="font-size:14px; font-weight:700; color:#92400e;">Menunggu Persetujuan Guru ({{ $pendingEnrollments->count() }})</span>
+            </div>
+            @foreach($pendingEnrollments as $pe)
+            <div style="display:flex; align-items:center; justify-content:space-between; background:white; border:1px solid #fde68a; border-radius:10px; padding:12px 16px; margin-bottom:8px;">
+                <div>
+                    <div style="font-size:14px; font-weight:700; color:#1e293b;">{{ $pe->course->title ?? '-' }}</div>
+                    <div style="font-size:12px; color:#92400e;">Guru: {{ $pe->course->teacher->name ?? '-' }} · Diminta {{ $pe->created_at->diffForHumans() }}</div>
+                </div>
+                <span style="font-size:11px; font-weight:600; background:#fef3c7; color:#b45309; padding:4px 12px; border-radius:100px;">Menunggu</span>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+
     <!-- My Courses Section -->
     <div class="flex justify-between items-center mb-6">
         <h2 style="font-size:24px; font-weight:800; color:#1e293b; margin:0;">Course Saya</h2>
@@ -115,7 +136,7 @@
                         </div>
 
                         <div style="background:#f8fafc; border-radius:10px; padding:14px 16px; margin-bottom:24px; font-size:13px; color:#64748b; line-height:1.6;">
-                            💡 Minta Course ID kepada guru atau instruktur Anda. ID bisa dilihat di URL halaman kursus mereka.
+                            💡 Minta Kode Kelas kepada guru Anda. Setelah bergabung, permintaanmu akan menunggu persetujuan guru.
                         </div>
                     </div>
 

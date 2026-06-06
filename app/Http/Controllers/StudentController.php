@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 class StudentController extends Controller
 {
     /**
-     * Tampilkan daftar siswa yang terdaftar di course tertentu.
+     * Daftar siswa (approved + pending) di course milik guru.
      * GET /teacher/courses/{courseId}/students
      */
     public function index(int $courseId)
@@ -18,14 +18,22 @@ class StudentController extends Controller
             ->where('teacher_id', Auth::id())
             ->firstOrFail();
 
-        // Ambil semua siswa yang enroll di course ini beserta submissions mereka
+        // Siswa approved
         $students = CourseEnrollment::where('course_id', $courseId)
+            ->where('status', 'approved')
             ->with(['user.submissions' => function ($q) use ($courseId) {
                 $q->where('course_id', $courseId)->with('assignment');
             }])
             ->get()
             ->pluck('user')
             ->filter();
+
+        // Siswa pending (menunggu persetujuan)
+        $pendingEnrollments = CourseEnrollment::where('course_id', $courseId)
+            ->where('status', 'pending')
+            ->with('user')
+            ->latest()
+            ->get();
 
         $pendingCount = Submission::where('course_id', $courseId)
             ->where('status', 'pending')
@@ -35,6 +43,50 @@ class StudentController extends Controller
             ->where('status', 'graded')
             ->count();
 
-        return view('teacher.students.index', compact('course', 'students', 'pendingCount', 'gradedCount'));
+        return view('teacher.students.index', compact(
+            'course', 'students', 'pendingEnrollments', 'pendingCount', 'gradedCount'
+        ));
+    }
+
+    /**
+     * Setujui permintaan join siswa.
+     * POST /teacher/courses/{courseId}/students/{enrollmentId}/approve
+     */
+    public function approve(int $courseId, int $enrollmentId)
+    {
+        $course = Course::where('id', $courseId)
+            ->where('teacher_id', Auth::id())
+            ->firstOrFail();
+
+        $enrollment = CourseEnrollment::where('id', $enrollmentId)
+            ->where('course_id', $courseId)
+            ->where('status', 'pending')
+            ->firstOrFail();
+
+        $enrollment->update(['status' => 'approved']);
+
+        return redirect()->route('teacher.courses.students', $courseId)
+            ->with('success', $enrollment->user->name . ' berhasil disetujui ke kelas ' . $course->title . '.');
+    }
+
+    /**
+     * Tolak permintaan join atau hapus siswa dari kelas.
+     * DELETE /teacher/courses/{courseId}/students/{enrollmentId}
+     */
+    public function destroy(int $courseId, int $enrollmentId)
+    {
+        $course = Course::where('id', $courseId)
+            ->where('teacher_id', Auth::id())
+            ->firstOrFail();
+
+        $enrollment = CourseEnrollment::where('id', $enrollmentId)
+            ->where('course_id', $courseId)
+            ->firstOrFail();
+
+        $name = $enrollment->user->name ?? 'Siswa';
+        $enrollment->delete();
+
+        return redirect()->route('teacher.courses.students', $courseId)
+            ->with('success', $name . ' berhasil dihapus dari kelas.');
     }
 }

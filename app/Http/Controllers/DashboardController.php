@@ -271,7 +271,14 @@ class DashboardController extends Controller
         $courseIds = $courses->pluck('id');
 
         $totalStudents = CourseEnrollment::whereIn('course_id', $courseIds)
+            ->where('status', 'approved')
             ->distinct('user_id')->count('user_id');
+
+        $pendingApprovals = CourseEnrollment::whereIn('course_id', $courseIds)
+            ->where('status', 'pending')
+            ->with(['user', 'course'])
+            ->latest()
+            ->get();
 
         $totalAssignments = Assignment::whereIn('course_id', $courseIds)->count();
 
@@ -286,6 +293,7 @@ class DashboardController extends Controller
             'totalStudents',
             'totalAssignments',
             'pendingSubmissions',
+            'pendingApprovals',
         ));
     }
 
@@ -293,9 +301,17 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Ambil Kursus yang diikuti (Enrollments)
+        // 1. Ambil Kursus yang diikuti (hanya yang sudah diapprove guru)
         $enrolledCourses = CourseEnrollment::with(['course.teacher', 'course.modules.materials'])
             ->where('user_id', $user->id)
+            ->where('status', 'approved')
+            ->latest()
+            ->get();
+
+        // Permintaan pending (menunggu persetujuan)
+        $pendingEnrollments = CourseEnrollment::with('course.teacher')
+            ->where('user_id', $user->id)
+            ->where('status', 'pending')
             ->latest()
             ->get();
 
@@ -327,6 +343,7 @@ class DashboardController extends Controller
         return view('student.dashboard', compact(
             'user',
             'enrolledCourses',
+            'pendingEnrollments',
             'overallProgress',
             'avgGrade',
         ));
