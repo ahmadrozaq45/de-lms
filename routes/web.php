@@ -135,6 +135,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/attempts/{attemptId}/result',   [QuizController::class, 'resultWeb'])
              ->name('quizzes.result');
     });
+
+     // ── RECOMMENDATIONS (semua role) ─────────────────────────────────────
+     Route::prefix('recommendations')->name('recommendations.')->group(function () {
+        Route::get('/',               [RecommendationController::class, 'index'])    ->name('index');
+        Route::get('/widget',         [RecommendationController::class, 'widget'])   ->name('widget');
+        Route::post('/{id}/feedback', [RecommendationController::class, 'feedback']) ->name('feedback');
+        Route::post('/refresh',       [RecommendationController::class, 'refresh'])  ->name('refresh');
+        Route::get('/{id}/goto',      [RecommendationController::class, 'goto'])     ->name('goto');
+     });
 });
 
 require __DIR__.'/auth.php';
