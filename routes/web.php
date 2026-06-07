@@ -14,6 +14,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\RecommendationController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -42,6 +43,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/settings/profile', [SettingController::class, 'updateProfile'])->name('settings.profile');
     Route::patch('/settings/password',[SettingController::class, 'updatePassword'])->name('settings.password');
     Route::delete('/settings/account',[SettingController::class, 'deleteAccount'])->name('settings.delete');
+
+         // Admin-only setting routes
+    Route::patch('/settings/api',         [SettingController::class, 'updateApi'])->name('settings.api');
+    Route::patch('/settings/theme',       [SettingController::class, 'updateTheme'])->name('settings.theme');
+    Route::patch('/settings/landingpage', [SettingController::class, 'updateLandingPage'])->name('settings.landingpage');
+    Route::patch('/settings/certificate', [SettingController::class, 'updateCertificate'])->name('settings.certificate');
 
     // ── GURU ─────────────────────────────────────────────────────────────────
     Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {

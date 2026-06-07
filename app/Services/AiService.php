@@ -8,14 +8,35 @@ use Illuminate\Support\Facades\Log;
 
 class AiService
 {
-    private string $apiUrl   = 'https://api.anthropic.com/v1/messages';
-    private string $model    = 'claude-opus-4-6';
     private string $apiKey;
+    private string $provider; // 'anthropic' | 'gemini' | 'groq'
+    private string $model;
+
+    // Endpoint per provider
+    private const ENDPOINTS = [
+        'anthropic' => 'https://api.anthropic.com/v1/messages',
+        'gemini'    => 'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent',
+        'groq'      => 'https://api.groq.com/openai/v1/chat/completions',
+    ];
+
+    // Default model per provider
+    private const DEFAULT_MODELS = [
+        'anthropic' => 'claude-sonnet-4-6',
+        'gemini'    => 'gemini-1.5-flash',
+        'groq'      => 'llama-3.1-8b-instant',
+    ];
 
     public function __construct()
     {
-        $this->apiKey = config('services.anthropic.key', '');
+        // Baca dari DB setting, fallback ke .env
+        $this->provider = \App\Models\Setting::get('ai_provider', 'anthropic');
+        $this->apiKey   = \App\Models\Setting::get('ai_api_key', '')
+            ?: config('services.anthropic.key', '');
+        $this->model    = \App\Models\Setting::get('ai_model', '')
+            ?: self::DEFAULT_MODELS[$this->provider] ?? 'gemini-1.5-flash';
     }
+
+    // ── Public Methods ────────────────────────────────────────────────────────
 
     /**
      * Generate AI recommendation (analisis performa siswa di suatu kursus).
@@ -23,10 +44,9 @@ class AiService
      */
     public function generateStudentRecommendation(User $student, Course $course): AiAnalysis
     {
-        // Kumpulkan data performa siswa
         $allMaterialIds = Material::whereHas('module', fn($q) => $q->where('course_id', $course->id))
             ->pluck('id');
-        $totalMaterials    = $allMaterialIds->count();
+        $totalMaterials     = $allMaterialIds->count();
         $completedMaterials = MaterialProgress::where('user_id', $student->id)
             ->whereIn('material_id', $allMaterialIds)
             ->where('is_completed', true)
@@ -38,9 +58,9 @@ class AiService
             ->whereNotNull('score')
             ->get();
 
-        $avgQuizScore   = $quizAttempts->avg('score') ?? 0;
-        $failedQuizzes  = $quizAttempts->where('is_passed', false)->count();
-        $passedQuizzes  = $quizAttempts->where('is_passed', true)->count();
+        $avgQuizScore  = $quizAttempts->avg('score') ?? 0;
+        $failedQuizzes = $quizAttempts->where('is_passed', false)->count();
+        $passedQuizzes = $quizAttempts->where('is_passed', true)->count();
 
         $submissions = Submission::where('student_id', $student->id)
             ->whereHas('assignment', fn($q) => $q->where('course_id', $course->id))
@@ -48,8 +68,7 @@ class AiService
             ->get();
 
         $avgAssignmentScore = $submissions->avg('score') ?? 0;
-
-        $progressPercent = $totalMaterials > 0
+        $progressPercent    = $totalMaterials > 0
             ? round(($completedMaterials / $totalMaterials) * 100)
             : 0;
 
@@ -89,8 +108,7 @@ PROMPT;
     }
 
     /**
-     * Proses satu giliran conversation quiz:
-     * Kirim history + pesan baru ke AI, kembalikan balasan AI.
+     * Proses satu giliran conversation quiz.
      */
     public function conversationTurn(Quiz $quiz, array $history, string $userMessage): string
     {
@@ -99,33 +117,13 @@ PROMPT;
              . "Ajukan pertanyaan yang menggali pemahaman mereka secara mendalam. "
              . "Jangan langsung memberi jawaban—dorong siswa untuk berpikir.";
 
-        // Build messages array untuk Anthropic API
         $messages = [];
         foreach ($history as $turn) {
-            $messages[] = [
-                'role'    => $turn['role'], // 'user' atau 'assistant'
-                'content' => $turn['message'],
-            ];
+            $messages[] = ['role' => $turn['role'], 'content' => $turn['message']];
         }
         $messages[] = ['role' => 'user', 'content' => $userMessage];
 
-        $response = Http::withHeaders([
-            'x-api-key'         => $this->apiKey,
-            'anthropic-version' => '2023-06-01',
-            'content-type'      => 'application/json',
-        ])->post($this->apiUrl, [
-            'model'      => $this->model,
-            'max_tokens' => 512,
-            'system'     => $systemPrompt,
-            'messages'   => $messages,
-        ]);
-
-        if ($response->failed()) {
-            Log::error('Anthropic API error', ['response' => $response->body()]);
-            return 'Maaf, terjadi kesalahan. Silakan coba lagi.';
-        }
-
-        return $response->json('content.0.text', 'Tidak ada respons.');
+        return $this->callAiChat($systemPrompt, $messages);
     }
 
     /**
@@ -165,26 +163,14 @@ Jawab hanya dengan JSON, tanpa teks lain.
 PROMPT;
 
         try {
-            $response = Http::withHeaders([
-                'x-api-key'         => $this->apiKey,
-                'anthropic-version' => '2023-06-01',
-                'content-type'      => 'application/json',
-            ])->post($this->apiUrl, [
-                'model'      => $this->model,
-                'max_tokens' => 512,
-                'messages'   => [
-                    ['role' => 'user', 'content' => $prompt],
-                ],
-            ]);
-
-            $text = $response->json('content.0.text', '{}');
-            $data = json_decode($text, true);
+            $text = $this->callAiRaw($prompt);
+            $data = json_decode($this->stripJsonFences($text), true);
 
             return [
-                'score'     => $data['score'] ?? 0,
-                'feedback'  => $data['feedback'] ?? '',
-                'strengths' => $data['strengths'] ?? '',
-                'weaknesses'=> $data['weaknesses'] ?? '',
+                'score'      => $data['score']      ?? 0,
+                'feedback'   => $data['feedback']   ?? '',
+                'strengths'  => $data['strengths']  ?? '',
+                'weaknesses' => $data['weaknesses'] ?? '',
             ];
         } catch (\Exception $e) {
             Log::error('AI evaluation error', ['error' => $e->getMessage()]);
@@ -192,27 +178,16 @@ PROMPT;
         }
     }
 
+    // ── Private: Dispatcher ───────────────────────────────────────────────────
+
     /**
-     * Panggil Anthropic API dengan prompt sederhana, harapkan JSON response.
-     * Return [status_prediction, recommendation].
+     * Kirim prompt sederhana, return [status_prediction, recommendation].
      */
     private function callApi(string $prompt): array
     {
         try {
-            $response = Http::withHeaders([
-                'x-api-key'         => $this->apiKey,
-                'anthropic-version' => '2023-06-01',
-                'content-type'      => 'application/json',
-            ])->post($this->apiUrl, [
-                'model'      => $this->model,
-                'max_tokens' => 512,
-                'messages'   => [
-                    ['role' => 'user', 'content' => $prompt],
-                ],
-            ]);
-
-            $text = $response->json('content.0.text', '{}');
-            $data = json_decode($text, true);
+            $text = $this->callAiRaw($prompt);
+            $data = json_decode($this->stripJsonFences($text), true);
 
             return [
                 $data['status_prediction'] ?? 'Unknown',
@@ -222,5 +197,154 @@ PROMPT;
             Log::error('AI service error', ['error' => $e->getMessage()]);
             return ['Unknown', 'Gagal generate rekomendasi.'];
         }
+    }
+
+    /**
+     * Kirim prompt ke provider yang aktif, return teks mentah.
+     */
+    private function callAiRaw(string $prompt): string
+    {
+        return match ($this->provider) {
+            'gemini' => $this->callGemini($prompt),
+            'groq'   => $this->callGroq([['role' => 'user', 'content' => $prompt]]),
+            default  => $this->callAnthropic([['role' => 'user', 'content' => $prompt]]),
+        };
+    }
+
+    /**
+     * Kirim multi-turn chat ke provider yang aktif, return teks balasan.
+     */
+    private function callAiChat(string $system, array $messages): string
+    {
+        return match ($this->provider) {
+            'gemini' => $this->callGeminiChat($system, $messages),
+            'groq'   => $this->callGroq($messages, $system),
+            default  => $this->callAnthropicChat($system, $messages),
+        };
+    }
+
+    // ── Private: Anthropic ────────────────────────────────────────────────────
+
+    private function callAnthropic(array $messages): string
+    {
+        $response = Http::withHeaders([
+            'x-api-key'         => $this->apiKey,
+            'anthropic-version' => '2023-06-01',
+            'content-type'      => 'application/json',
+        ])->post(self::ENDPOINTS['anthropic'], [
+            'model'      => $this->model,
+            'max_tokens' => 512,
+            'messages'   => $messages,
+        ]);
+
+        if ($response->failed()) {
+            Log::error('Anthropic API error', ['body' => $response->body()]);
+            throw new \RuntimeException('Anthropic API gagal: ' . $response->status());
+        }
+
+        return $response->json('content.0.text', '{}');
+    }
+
+    private function callAnthropicChat(string $system, array $messages): string
+    {
+        $response = Http::withHeaders([
+            'x-api-key'         => $this->apiKey,
+            'anthropic-version' => '2023-06-01',
+            'content-type'      => 'application/json',
+        ])->post(self::ENDPOINTS['anthropic'], [
+            'model'      => $this->model,
+            'max_tokens' => 512,
+            'system'     => $system,
+            'messages'   => $messages,
+        ]);
+
+        if ($response->failed()) {
+            Log::error('Anthropic chat error', ['body' => $response->body()]);
+            return 'Maaf, terjadi kesalahan. Silakan coba lagi.';
+        }
+
+        return $response->json('content.0.text', 'Tidak ada respons.');
+    }
+
+    // ── Private: Gemini ───────────────────────────────────────────────────────
+
+    private function callGemini(string $prompt): string
+    {
+        $url = str_replace('{model}', $this->model, self::ENDPOINTS['gemini'])
+             . '?key=' . $this->apiKey;
+
+        $response = Http::post($url, [
+            'contents' => [
+                ['role' => 'user', 'parts' => [['text' => $prompt]]],
+            ],
+            'generationConfig' => ['maxOutputTokens' => 512, 'temperature' => 0.3],
+        ]);
+
+        if ($response->failed()) {
+            Log::error('Gemini API error', ['body' => $response->body()]);
+            throw new \RuntimeException('Gemini API gagal: ' . $response->status());
+        }
+
+        return $response->json('candidates.0.content.parts.0.text', '{}');
+    }
+
+    private function callGeminiChat(string $system, array $messages): string
+    {
+        $url = str_replace('{model}', $this->model, self::ENDPOINTS['gemini'])
+             . '?key=' . $this->apiKey;
+
+        // Gemini tidak punya system role terpisah — inject sebagai pesan pertama
+        $contents = [
+            ['role' => 'user',  'parts' => [['text' => $system]]],
+            ['role' => 'model', 'parts' => [['text' => 'Baik, saya siap.']]],
+        ];
+
+        foreach ($messages as $msg) {
+            $geminiRole = $msg['role'] === 'assistant' ? 'model' : 'user';
+            $contents[] = ['role' => $geminiRole, 'parts' => [['text' => $msg['content']]]];
+        }
+
+        $response = Http::post($url, [
+            'contents'         => $contents,
+            'generationConfig' => ['maxOutputTokens' => 512, 'temperature' => 0.3],
+        ]);
+
+        if ($response->failed()) {
+            Log::error('Gemini chat error', ['body' => $response->body()]);
+            return 'Maaf, terjadi kesalahan. Silakan coba lagi.';
+        }
+
+        return $response->json('candidates.0.content.parts.0.text', 'Tidak ada respons.');
+    }
+
+    // ── Private: Groq (OpenAI-compatible) ────────────────────────────────────
+
+    private function callGroq(array $messages, string $system = ''): string
+    {
+        $payload = ['model' => $this->model, 'max_tokens' => 512, 'temperature' => 0.3];
+
+        if ($system) {
+            array_unshift($messages, ['role' => 'system', 'content' => $system]);
+        }
+        $payload['messages'] = $messages;
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->apiKey,
+            'Content-Type'  => 'application/json',
+        ])->post(self::ENDPOINTS['groq'], $payload);
+
+        if ($response->failed()) {
+            Log::error('Groq API error', ['body' => $response->body()]);
+            return 'Maaf, terjadi kesalahan. Silakan coba lagi.';
+        }
+
+        return $response->json('choices.0.message.content', '{}');
+    }
+
+    // ── Utility ───────────────────────────────────────────────────────────────
+
+    private function stripJsonFences(string $text): string
+    {
+        return trim(preg_replace('/^```json\s*|^```\s*|```$/m', '', trim($text)));
     }
 }

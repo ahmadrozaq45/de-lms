@@ -14,31 +14,36 @@ class ReportController extends Controller
         $totalStudents = User::where('role', 'student')->count();
         $totalTeachers = User::where('role', 'teacher')->count();
         $totalCourses  = Course::count();
-
+ 
         $totalEnrollments = CourseEnrollment::where('status', 'approved')->count();
         $totalSubmissions = Submission::count();
         $totalQuizAttempts = QuizAttempt::whereNotNull('score')->count();
         $avgQuizScore = QuizAttempt::whereNotNull('score')->avg('score') ?? 0;
-
+ 
         // Top 5 kursus dengan siswa terbanyak
         $topCourses = Course::withCount(['enrollments' => fn($q) => $q->where('status','approved')])
             ->with('teacher:id,name')
             ->orderByDesc('enrollments_count')
             ->limit(5)->get();
-
+ 
         // Guru dengan kursus terbanyak
         $topTeachers = User::where('role', 'teacher')
             ->withCount('teacherCourses')
             ->orderByDesc('teacher_courses_count')
             ->limit(5)->get();
-
+ 
         // Submission per status
         $submissionStats = [
             'pending'  => Submission::where('status','pending')->count(),
             'graded'   => Submission::where('status','graded')->count(),
             'reviewed' => Submission::where('status','reviewed')->count(),
         ];
-
+ 
+        $topTeachers = User::where('role', 'teacher')
+            ->withCount('teacherCourses')
+            ->orderByDesc('teacher_courses_count')
+            ->limit(5)->get();
+ 
         return view('admin.report', compact(
             'totalUsers','totalStudents','totalTeachers','totalCourses',
             'totalEnrollments','totalSubmissions','totalQuizAttempts','avgQuizScore',
