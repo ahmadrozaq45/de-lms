@@ -260,10 +260,68 @@ class DashboardController extends Controller
     // WEB VIEWS (Blade)
     // =========================================================
 
-    public function admin()
+        public function admin()
     {
-        return view('admin.dashboard');
+        // Statistik utama
+        $stats = [
+            'total_students' => User::where('role', 'student')->count(),
+            'total_teachers' => User::where('role', 'teacher')->count(),
+            'total_courses'  => Course::count(),
+            'total_quizzes'  => Quiz::count(),
+        ];
+
+        // Registrasi user per bulan (6 bulan terakhir)
+        $userGrowth = collect(range(5, 0))->map(function ($i) {
+            $month = now()->subMonths($i);
+            return [
+                'label'    => $month->translatedFormat('M Y'),
+                'students' => User::where('role', 'student')
+                    ->whereYear('created_at', $month->year)
+                    ->whereMonth('created_at', $month->month)
+                    ->count(),
+                'teachers' => User::where('role', 'teacher')
+                    ->whereYear('created_at', $month->year)
+                    ->whereMonth('created_at', $month->month)
+                    ->count(),
+            ];
+        });
+
+        // Top 5 kursus dengan siswa terbanyak
+        $topCourses = Course::withCount(['enrollments' => fn($q) => $q->where('status', 'approved')])
+            ->with('teacher:id,name')
+            ->orderByDesc('enrollments_count')
+            ->limit(5)
+            ->get();
+
+        // Recent quiz failures (30 hari terakhir)
+        $recentFailures = \App\Models\QuizAttempt::with(['user:id,name', 'quiz:id,title,passing_score'])
+            ->where('is_passed', false)
+            ->whereNotNull('score')
+            ->where('created_at', '>=', now()->subDays(30))
+            ->latest()
+            ->limit(8)
+            ->get();
+
+        // Distribusi enrollment per kursus (untuk chart bar)
+        $enrollmentStats = Course::withCount(['enrollments' => fn($q) => $q->where('status', 'approved')])
+            ->with('teacher:id,name')
+            ->orderByDesc('enrollments_count')
+            ->limit(7)
+            ->get();
+
+        // User terbaru
+        $recentUsers = User::latest()->limit(5)->get();
+
+        return view('admin.dashboard', compact(
+            'stats',
+            'userGrowth',
+            'topCourses',
+            'recentFailures',
+            'enrollmentStats',
+            'recentUsers',
+        ));
     }
+
 
     public function teacher()
     {

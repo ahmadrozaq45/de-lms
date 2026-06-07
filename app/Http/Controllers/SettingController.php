@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\{Auth, Hash};
 use Illuminate\Validation\Rule;
@@ -11,8 +12,22 @@ class SettingController extends Controller
     public function index()
     {
         $user = Auth::user();
-        return view('settings.index', compact('user'));
+
+        // Setting admin (hanya diload jika admin)
+        $appSettings = [];
+        if ($user->role === 'admin') {
+            $appSettings = Setting::getMany([
+                'ai_provider', 'ai_api_key', 'ai_model',
+                'theme_color', 'theme_mode',
+                'lp_title', 'lp_subtitle', 'lp_show_courses',
+                'cert_enabled', 'cert_issuer_name', 'cert_footer_text',
+            ]);
+        }
+
+        return view('settings.index', compact('user', 'appSettings'));
     }
+
+    // ── Profil ──────────────────────────────────────────────────────────────
 
     public function updateProfile(Request $request)
     {
@@ -26,11 +41,13 @@ class SettingController extends Controller
             ->with('success', 'Profil berhasil diperbarui.');
     }
 
+    // ── Password ─────────────────────────────────────────────────────────────
+
     public function updatePassword(Request $request)
     {
         $request->validate([
-            'current_password'      => 'required',
-            'password'              => 'required|min:8|confirmed',
+            'current_password' => 'required',
+            'password'         => 'required|min:8|confirmed',
         ]);
 
         $user = Auth::user();
@@ -44,6 +61,8 @@ class SettingController extends Controller
         return redirect()->route('settings.index')
             ->with('success', 'Password berhasil diperbarui.');
     }
+
+    // ── Hapus Akun ───────────────────────────────────────────────────────────
 
     public function deleteAccount(Request $request)
     {
@@ -62,5 +81,96 @@ class SettingController extends Controller
         $request->session()->regenerateToken();
 
         return redirect('/')->with('success', 'Akun berhasil dihapus.');
+    }
+
+    // ── Admin: API Setting ───────────────────────────────────────────────────
+
+    public function updateApi(Request $request)
+    {
+        $this->authorizeAdmin();
+
+        $request->validate([
+            'ai_provider' => 'required|in:anthropic,gemini,groq,openai',
+            'ai_api_key'  => 'nullable|string|max:500',
+            'ai_model'    => 'required|string|max:100',
+        ]);
+
+        Setting::set('ai_provider', $request->ai_provider);
+        Setting::set('ai_api_key',  $request->ai_api_key ?? '');
+        Setting::set('ai_model',    $request->ai_model);
+
+        return redirect()->route('settings.index')
+            ->with('success', 'Pengaturan API berhasil disimpan.')
+            ->with('tab', 'api');
+    }
+    
+    // ── Admin: Theme Setting ─────────────────────────────────────────────────
+
+    public function updateTheme(Request $request)
+    {
+        $this->authorizeAdmin();
+
+        $request->validate([
+            'theme_color' => ['required', 'regex:/^#[0-9a-fA-F]{6}$/'],
+            'theme_mode'  => 'required|in:light,dark',
+        ]);
+
+        Setting::set('theme_color', $request->theme_color);
+        Setting::set('theme_mode',  $request->theme_mode);
+
+        return redirect()->route('settings.index')
+            ->with('success', 'Tema berhasil diperbarui.')
+            ->with('tab', 'theme');
+    }
+
+    // ── Admin: Landing Page Setting ──────────────────────────────────────────
+
+    public function updateLandingPage(Request $request)
+    {
+        $this->authorizeAdmin();
+
+        $request->validate([
+            'lp_title'        => 'required|string|max:120',
+            'lp_subtitle'     => 'nullable|string|max:300',
+            'lp_show_courses' => 'nullable',
+        ]);
+
+        Setting::set('lp_title',        $request->lp_title);
+        Setting::set('lp_subtitle',     $request->lp_subtitle ?? '');
+        Setting::set('lp_show_courses', $request->has('lp_show_courses') ? '1' : '0');
+
+        return redirect()->route('settings.index')
+            ->with('success', 'Setting landing page berhasil disimpan.')
+            ->with('tab', 'landingpage');
+    }
+
+    // ── Admin: Certificate Setting ───────────────────────────────────────────
+
+    public function updateCertificate(Request $request)
+    {
+        $this->authorizeAdmin();
+
+        $request->validate([
+            'cert_issuer_name' => 'required|string|max:120',
+            'cert_footer_text' => 'nullable|string|max:300',
+            'cert_enabled'     => 'nullable',
+        ]);
+
+        Setting::set('cert_enabled',     $request->has('cert_enabled') ? '1' : '0');
+        Setting::set('cert_issuer_name', $request->cert_issuer_name);
+        Setting::set('cert_footer_text', $request->cert_footer_text ?? '');
+
+        return redirect()->route('settings.index')
+            ->with('success', 'Setting sertifikat berhasil disimpan.')
+            ->with('tab', 'certificate');
+    }
+
+    // ── Helper ───────────────────────────────────────────────────────────────
+
+    private function authorizeAdmin(): void
+    {
+        if (Auth::user()->role !== 'admin') {
+            abort(403, 'Akses ditolak.');
+        }
     }
 }
