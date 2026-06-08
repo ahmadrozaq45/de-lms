@@ -73,12 +73,4 @@ class User extends Authenticatable
     {
         return $this->hasMany(Grade::class);
     }
-
-    public function badges(): BelongsToMany
-    {
-        return $this->belongsToMany(Badge::class, 'user_badges')
-                    ->using(UserBadge::class)
-                    ->withPivot('earned_at')
-                    ->withTimestamps();
-    }
 }

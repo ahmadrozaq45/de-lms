@@ -62,9 +62,8 @@
             
             <div style="display:flex; border-bottom:1px solid #e2e8f0; background:#f8fafc; padding:0 16px;">
                 <button class="tab-btn active" onclick="switchTab(event,'materi')">Materi</button>
-                <button class="tab-btn" onclick="switchTab(event,'diskusi')">Diskusi</button>
                 <button class="tab-btn" onclick="switchTab(event,'tugas')">Tugas</button>
-                <button class="tab-btn" onclick="switchTab(event,'ujian')">Quiz</button>
+                <button class="tab-btn" onclick="switchTab(event,'quiz')">Quiz</button>
             </div>
 
             <div id="tab-materi" class="tab-content active" style="padding:32px;">
@@ -103,11 +102,6 @@
                         <p>Belum ada materi tersedia untuk kursus ini.</p>
                     </div>
                 @endforelse
-            </div>
-
-            <div id="tab-diskusi" class="tab-content" style="padding:32px; text-align:center;">
-                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" style="margin:0 auto 16px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                <p style="color:#64748b; font-size:15px; font-weight:500;">Forum diskusi akan segera hadir. Nantikan interaksi dengan teman sekelas!</p>
             </div>
 
             <div id="tab-tugas" class="tab-content" style="padding:32px;">
@@ -158,7 +152,7 @@
                 @endif
             </div>
 
-            <div id="tab-ujian" class="tab-content" style="padding:32px;">
+            <div id="tab-quiz" class="tab-content" style="padding:32px;">
                 @php $hasQuiz = false; @endphp
 
                 @foreach ($course->quizzes as $quiz)

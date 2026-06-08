@@ -3,53 +3,57 @@
 namespace App\Http\Controllers;
 
 use App\Models\CourseEnrollment;
-use App\Services\BadgeService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class EnrollmentController extends Controller
 {
-    public function __construct(private BadgeService $badgeService) {}
-
     /**
-     * Proses pendaftaran siswa ke kelas.
-     * POST /api/enroll  |  POST /student/enroll
+     * Siswa meminta bergabung ke kelas via course_code.
+     * Status awal: pending (menunggu persetujuan guru).
      */
     public function store(Request $request)
     {
         $request->validate([
-            'course_id' => 'required|integer',
+            'course_code' => 'required|string|max:7',
         ]);
 
-        // Cek course ada
-        $course = \App\Models\Course::find($request->course_id);
+        $course = \App\Models\Course::where('course_code', $request->course_code)->first();
+
         if (!$course) {
-            return redirect()->back()
-                ->withInput()
-                ->with('error', 'Course ID tidak ditemukan. Pastikan ID yang Anda masukkan benar.');
+            if ($request->expectsJson()) {
+                return response()->json(['error' => 'Kode course tidak ditemukan.'], 404);
+            }
+            return redirect()->back()->withInput()
+                ->with('error', 'Kode course tidak ditemukan. Pastikan kode yang Anda masukkan benar.');
         }
 
-        // Cek sudah terdaftar
-        $alreadyEnrolled = CourseEnrollment::where('user_id', Auth::id())
-            ->where('course_id', $request->course_id)
-            ->exists();
+        $existing = CourseEnrollment::where('user_id', Auth::id())
+            ->where('course_id', $course->id)
+            ->first();
 
-        if ($alreadyEnrolled) {
-            return redirect()->back()->with('error', 'Anda sudah terdaftar di course "' . $course->title . '".');
+        if ($existing) {
+            $msg = $existing->isPending()
+                ? 'Permintaan bergabung ke "' . $course->title . '" sedang menunggu persetujuan guru.'
+                : 'Anda sudah terdaftar di course "' . $course->title . '".';
+
+            if ($request->expectsJson()) {
+                return response()->json(['error' => $msg], 409);
+            }
+            return redirect()->back()->with('error', $msg);
         }
 
         CourseEnrollment::create([
             'user_id'   => Auth::id(),
-            'course_id' => $request->course_id,
+            'course_id' => $course->id,
+            'status'    => 'pending',
         ]);
 
-        $this->badgeService->checkFirstLogin(Auth::user());
-
         if ($request->expectsJson()) {
-            return response()->json(['message' => 'Berhasil mendaftar ke kelas.'], 201);
+            return response()->json(['message' => 'Permintaan bergabung terkirim. Menunggu persetujuan guru.'], 201);
         }
 
         return redirect()->route('student.dashboard')
-            ->with('success', 'Selamat! Anda berhasil bergabung ke course "' . $course->title . '".');
+            ->with('success', 'Permintaan bergabung ke "' . $course->title . '" berhasil dikirim. Menunggu persetujuan guru.');
     }
 }

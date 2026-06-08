@@ -39,6 +39,22 @@
             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
         </div>
 
+        <div class="mb-3">
+            <label class="form-label d-block mb-2">Pilih Role</label>
+            
+            <div class="d-flex gap-2"> 
+                <div class="flex-fill">
+                    <input type="radio" class="btn-check" name="role" id="student" value="student" checked autocomplete="off">
+                    <label class="btn btn-role-selector w-100 py-2" for="student">Student</label>
+                </div>
+                
+                <div class="flex-fill">
+                    <input type="radio" class="btn-check" name="role" id="teacher" value="teacher" autocomplete="off">
+                    <label class="btn btn-role-selector w-100 py-2" for="teacher">Teacher</label>
+                </div>
+            </div>
+        </div>
+
         <div class="flex items-center justify-end mt-4">
             <a class="underline text-sm text-gray-600 hover:text-gray-900 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500" href="{{ route('login') }}">
                 {{ __('Already registered?') }}

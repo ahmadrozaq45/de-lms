@@ -2,78 +2,95 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
-//use App\Models\ActivityLog;
+use App\Models\{User, Course, CourseEnrollment};
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Validation\Rule;
 
 class UserController extends Controller
 {
-    /**
-     * Handle Login & Generate Token
-     */
-    public function login(Request $request)
+    public function index(Request $request)
     {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-            'device_name' => 'required', // Nama perangkat (misal: "iPhone_13" atau "Web_App")
-        ]);
+        $query = User::withCount(['enrollments', 'teacherCourses']);
 
-        $user = User::where('email', $request->email)->first();
-
-        // Cek user dan verifikasi password
-        if (!$user || !Hash::check($request->password, $user->password)) {
-            throw ValidationException::withMessages([
-                'email' => ['Kredensial yang diberikan salah.'],
-            ]);
+        if ($request->filled('role')) {
+            $query->where('role', $request->role);
+        }
+        if ($request->filled('search')) {
+            $query->where(function($q) use ($request) {
+                $q->where('name', 'like', '%'.$request->search.'%')
+                  ->orWhere('email', 'like', '%'.$request->search.'%');
+            });
         }
 
-        // Buat token baru
-        $token = $user->createToken($request->device_name)->plainTextToken;
+        $users   = $query->latest()->paginate(20)->withQueryString();
+        $stats   = [
+            'total'    => User::count(),
+            'admin'    => User::where('role', 'admin')->count(),
+            'teacher'  => User::where('role', 'teacher')->count(),
+            'student'  => User::where('role', 'student')->count(),
+        ];
 
-        return response()->json([
-            'status' => 'success',
-            'token' => $token,
-            'user' => $user
-        ]);
+        return view('admin.users.index', compact('users', 'stats'));
     }
 
-    /**
-     * Handle Logout (Hapus Token)
-     */
-    public function logout(Request $request)
+    public function create()
     {
-        // Menghapus token yang sedang digunakan saat ini
-        $request->user()->currentAccessToken()->delete();
-
-        return response()->json([
-            'status' => 'success',
-            'message' => 'Berhasil keluar dan token dihapus'
-        ]);
-    }
-    
-    public function show()
-    {
-        return response()->json(Auth::user());
+        return view('admin.users.create');
     }
 
-    public function update(Request $request)
+    public function store(Request $request)
     {
-        $user = Auth::user();
-        $validated = $request->validate([
-            'name' => 'string|max:255',
-            'email' => 'email|unique:users,email,' . $user->id,
-            'password' => 'nullable|min:8'
+        $data = $request->validate([
+            'name'     => 'required|string|max:255',
+            'email'    => 'required|email|unique:users',
+            'role'     => 'required|in:admin,teacher,student',
+            'password' => 'required|min:8|confirmed',
         ]);
 
-        if (isset($validated['password'])) {
-            $validated['password'] = Hash::make($validated['password']);
+        User::create([
+            'name'     => $data['name'],
+            'email'    => $data['email'],
+            'role'     => $data['role'],
+            'password' => Hash::make($data['password']),
+        ]);
+
+        return redirect()->route('admin.users.index')
+            ->with('success', 'User "'.$data['name'].'" berhasil ditambahkan.');
+    }
+
+    public function edit(User $user)
+    {
+        return view('admin.users.edit', compact('user'));
+    }
+
+    public function update(Request $request, User $user)
+    {
+        $data = $request->validate([
+            'name'  => 'required|string|max:255',
+            'email' => ['required', 'email', Rule::unique('users')->ignore($user->id)],
+            'role'  => 'required|in:admin,teacher,student',
+        ]);
+
+        $user->update($data);
+
+        if ($request->filled('password')) {
+            $request->validate(['password' => 'min:8|confirmed']);
+            $user->update(['password' => Hash::make($request->password)]);
         }
 
-        $user->update($validated);
-        return response()->json(['message' => 'Profile updated', 'user' => $user]);
+        return redirect()->route('admin.users.index')
+            ->with('success', 'User "'.$user->name.'" berhasil diperbarui.');
+    }
+
+    public function destroy(User $user)
+    {
+        if ($user->id === auth()->id()) {
+            return redirect()->back()->with('error', 'Tidak bisa menghapus akun sendiri.');
+        }
+        $name = $user->name;
+        $user->delete();
+        return redirect()->route('admin.users.index')
+            ->with('success', 'User "'.$name.'" berhasil dihapus.');
     }
 }

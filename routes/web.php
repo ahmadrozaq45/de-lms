@@ -10,7 +10,11 @@ use App\Http\Controllers\EnrollmentController;
 use App\Http\Controllers\AssignmentController;
 use App\Http\Controllers\StudentController;
 use App\Http\Controllers\QuizController;
+use App\Http\Controllers\UserController;
+use App\Http\Controllers\ReportController;
+use App\Http\Controllers\SettingController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\RecommendationController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -30,12 +34,27 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ── ADMIN ────────────────────────────────────────────────────────────────
     Route::middleware(['role:admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'admin'])->name('dashboard');
+        Route::resource('users', UserController::class)->except(['show']);
+        Route::get('/report', [ReportController::class, 'admin'])->name('report');
     });
+
+    // ── SETTINGS (semua role) ─────────────────────────────────────────────
+    Route::get('/settings',          [SettingController::class, 'index'])->name('settings.index');
+    Route::patch('/settings/profile', [SettingController::class, 'updateProfile'])->name('settings.profile');
+    Route::patch('/settings/password',[SettingController::class, 'updatePassword'])->name('settings.password');
+    Route::delete('/settings/account',[SettingController::class, 'deleteAccount'])->name('settings.delete');
+
+         // Admin-only setting routes
+    Route::patch('/settings/api',         [SettingController::class, 'updateApi'])->name('settings.api');
+    Route::patch('/settings/theme',       [SettingController::class, 'updateTheme'])->name('settings.theme');
+    Route::patch('/settings/landingpage', [SettingController::class, 'updateLandingPage'])->name('settings.landingpage');
+    Route::patch('/settings/certificate', [SettingController::class, 'updateCertificate'])->name('settings.certificate');
 
     // ── GURU ─────────────────────────────────────────────────────────────────
     Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {
 
         Route::get('/dashboard', [DashboardController::class, 'teacher'])->name('dashboard');
+        Route::get('/report',    [ReportController::class, 'teacher'])->name('report');
 
         Route::resource('courses', CourseController::class)
              ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);
@@ -57,6 +76,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::patch('/reviews/{id}',  [ReviewController::class, 'update'])->name('reviews.update');
         Route::get('/courses/{courseId}/students', [StudentController::class, 'index'])
              ->name('courses.students');
+        Route::post('/courses/{courseId}/students/{enrollmentId}/approve', [StudentController::class, 'approve'])
+             ->name('courses.students.approve');
+        Route::delete('/courses/{courseId}/students/{enrollmentId}', [StudentController::class, 'destroy'])
+             ->name('courses.students.destroy');
 
         // ── Quiz (Guru) ──────────────────────────────────────────────────────
         // Buat quiz baru untuk sebuah kursus
@@ -86,7 +109,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::middleware(['role:student'])->prefix('student')->name('student.')->group(function () {
 
         Route::get('/dashboard', [DashboardController::class, 'student'])->name('dashboard');
-
+        Route::get('/report',    [ReportController::class, 'student'])->name('report');
         Route::post('/enroll', [EnrollmentController::class, 'store'])->name('enroll');
 
         Route::get('/courses/{id}',                  [CourseController::class, 'show'])
@@ -119,6 +142,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/attempts/{attemptId}/result',   [QuizController::class, 'resultWeb'])
              ->name('quizzes.result');
     });
+
+     // ── RECOMMENDATIONS (semua role) ─────────────────────────────────────
+     Route::prefix('recommendations')->name('recommendations.')->group(function () {
+        Route::get('/',               [RecommendationController::class, 'index'])    ->name('index');
+        Route::get('/widget',         [RecommendationController::class, 'widget'])   ->name('widget');
+        Route::post('/{id}/feedback', [RecommendationController::class, 'feedback']) ->name('feedback');
+        Route::post('/refresh',       [RecommendationController::class, 'refresh'])  ->name('refresh');
+        Route::get('/{id}/goto',      [RecommendationController::class, 'goto'])     ->name('goto');
+     });
 });
 
 require __DIR__.'/auth.php';

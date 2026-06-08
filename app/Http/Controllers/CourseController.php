@@ -3,14 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Models\{Course, CourseEnrollment};
-use App\Services\BadgeService;
 use Illuminate\Http\{Request, JsonResponse};
 use Illuminate\Support\Facades\Auth;
 
 class CourseController extends Controller
 {
-    public function __construct(private BadgeService $badgeService) {}
-
     /**
      * Daftar kursus.
      * - API: semua kursus (bisa difilter by teacher)

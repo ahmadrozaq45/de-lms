@@ -7,14 +7,11 @@ use App\Models\{
     QuizAttempt, MaterialProgress, Material, User,
     AiAnalysis, Quiz
 };
-use App\Services\BadgeService;
 use Illuminate\Http\{Request, JsonResponse};
 use Illuminate\Support\Facades\Auth;
 
 class DashboardController extends Controller
 {
-    public function __construct(private BadgeService $badgeService) {}
-
     /**
      * Redirect ke dashboard sesuai role.
      */
@@ -107,14 +104,6 @@ class DashboardController extends Controller
                 'passing_score'=> $a->quiz->passing_score,
                 'completed_at' => $a->completed_at,
             ]);
-
-        // Badge
-        $badges = $user->badges()->orderByPivot('earned_at', 'desc')->get()->map(fn($b) => [
-            'name'     => $b->name,
-            'icon'     => $b->icon,
-            'earned_at'=> $b->pivot->earned_at,
-        ]);
-
         // AI rekomendasi terbaru (semua kursus)
         $aiRecommendations = AiAnalysis::where('user_id', $user->id)
             ->with('course')
@@ -136,9 +125,7 @@ class DashboardController extends Controller
             'stats'            => [
                 'total_courses'   => count($courseProgress),
                 'overall_progress'=> $overallProgress,
-                'total_badges'    => $badges->count(),
             ],
-            'badges'           => $badges,
             'course_progress'  => $courseProgress,
             'recent_assessment'=> $recentAttempts,
             'failed_quizzes'   => $failedQuizzes,
@@ -273,32 +260,180 @@ class DashboardController extends Controller
     // WEB VIEWS (Blade)
     // =========================================================
 
-    public function admin()
+        public function admin()
     {
-        return view('admin.dashboard');
+        // Statistik utama
+        $stats = [
+            'total_students' => User::where('role', 'student')->count(),
+            'total_teachers' => User::where('role', 'teacher')->count(),
+            'total_courses'  => Course::count(),
+            'total_quizzes'  => Quiz::count(),
+        ];
+
+        // Registrasi user per bulan (6 bulan terakhir)
+        $userGrowth = collect(range(5, 0))->map(function ($i) {
+            $month = now()->subMonths($i);
+            return [
+                'label'    => $month->translatedFormat('M Y'),
+                'students' => User::where('role', 'student')
+                    ->whereYear('created_at', $month->year)
+                    ->whereMonth('created_at', $month->month)
+                    ->count(),
+                'teachers' => User::where('role', 'teacher')
+                    ->whereYear('created_at', $month->year)
+                    ->whereMonth('created_at', $month->month)
+                    ->count(),
+            ];
+        });
+
+        // Top 5 kursus dengan siswa terbanyak
+        $topCourses = Course::withCount(['enrollments' => fn($q) => $q->where('status', 'approved')])
+            ->with('teacher:id,name')
+            ->orderByDesc('enrollments_count')
+            ->limit(5)
+            ->get();
+
+        // Recent quiz failures (30 hari terakhir)
+        $recentFailures = \App\Models\QuizAttempt::with(['user:id,name', 'quiz:id,title,passing_score'])
+            ->where('is_passed', false)
+            ->whereNotNull('score')
+            ->where('created_at', '>=', now()->subDays(30))
+            ->latest()
+            ->limit(8)
+            ->get();
+
+        // Distribusi enrollment per kursus (untuk chart bar)
+        $enrollmentStats = Course::withCount(['enrollments' => fn($q) => $q->where('status', 'approved')])
+            ->with('teacher:id,name')
+            ->orderByDesc('enrollments_count')
+            ->limit(7)
+            ->get();
+
+        // User terbaru
+        $recentUsers = User::latest()->limit(5)->get();
+
+        return view('admin.dashboard', compact(
+            'stats',
+            'userGrowth',
+            'topCourses',
+            'recentFailures',
+            'enrollmentStats',
+            'recentUsers',
+        ));
     }
+
 
     public function teacher()
     {
-        $courses   = Course::with('modules')->where('teacher_id', Auth::id())->get();
+        $teacherId = Auth::id();
+
+        // Semua course milik guru ini
+        $courses   = Course::with('modules.materials')->where('teacher_id', $teacherId)->get();
         $courseIds = $courses->pluck('id');
 
+        // ── STATS ──────────────────────────────────────────────
         $totalStudents = CourseEnrollment::whereIn('course_id', $courseIds)
-            ->distinct('user_id')->count('user_id');
+            ->where('status', 'approved')
+            ->distinct('user_id')
+            ->count('user_id');
 
-        $totalAssignments = Assignment::whereIn('course_id', $courseIds)->count();
+        $avgClassScore = QuizAttempt::whereHas('quiz', fn($q) => $q->whereIn('course_id', $courseIds))
+            ->whereNotNull('score')
+            ->avg('score') ?? 0;
 
-        $pendingSubmissions = Submission::whereHas('assignment.course', fn($q) => $q->whereIn('id', $courseIds))
+        $stats = [
+            'total_courses'   => $courses->count(),
+            'total_students'  => $totalStudents,
+            'avg_class_score' => round($avgClassScore, 1),
+        ];
+
+        // ── PENDING ────────────────────────────────────────────
+        $pendingApprovals = CourseEnrollment::whereIn('course_id', $courseIds)
             ->where('status', 'pending')
-            ->with('student')
+            ->with(['user', 'course'])
             ->latest()
             ->get();
 
+        $pendingSubmissions = Submission::whereHas('assignment.course',
+                fn($q) => $q->whereIn('id', $courseIds))
+            ->where('status', 'pending')
+            ->with(['student', 'assignment.course'])
+            ->latest()
+            ->get();
+
+        // ── SEMUA MATERIAL IDS ─────────────────────────────────
+        $allMaterialIds = Material::whereHas('module',
+            fn($q) => $q->whereIn('course_id', $courseIds))->pluck('id');
+
+        // ── ENROLLED STUDENT IDS ───────────────────────────────
+        $enrolledStudentIds = CourseEnrollment::whereIn('course_id', $courseIds)
+            ->where('status', 'approved')
+            ->pluck('user_id')
+            ->unique();
+
+        // ── STUDENT PALING AKTIF ───────────────────────────────
+        $completedPerStudent = MaterialProgress::whereIn('material_id', $allMaterialIds)
+            ->where('is_completed', true)
+            ->whereIn('user_id', $enrolledStudentIds)
+            ->selectRaw('user_id, COUNT(*) as completed_count')
+            ->groupBy('user_id')
+            ->orderByDesc('completed_count')
+            ->limit(5)
+            ->pluck('completed_count', 'user_id');
+
+        $avgScorePerStudent = QuizAttempt::whereHas('quiz',
+                fn($q) => $q->whereIn('course_id', $courseIds))
+            ->whereNotNull('score')
+            ->whereIn('user_id', $enrolledStudentIds)
+            ->selectRaw('user_id, ROUND(AVG(score), 1) as avg_score')
+            ->groupBy('user_id')
+            ->pluck('avg_score', 'user_id');
+
+        $mostActiveStudents = User::whereIn('id', $completedPerStudent->keys())
+            ->get()
+            ->map(function ($user) use ($completedPerStudent, $avgScorePerStudent) {
+                $user->completed_count = $completedPerStudent[$user->id] ?? 0;
+                $user->avg_score       = $avgScorePerStudent[$user->id] ?? null;
+                return $user;
+            })
+            ->sortByDesc('completed_count')
+            ->values();
+
+        // ── STUDENT KURANG AKTIF ───────────────────────────────
+        $allCompletedCounts = MaterialProgress::whereIn('material_id', $allMaterialIds)
+            ->where('is_completed', true)
+            ->whereIn('user_id', $enrolledStudentIds)
+            ->selectRaw('user_id, COUNT(*) as completed_count')
+            ->groupBy('user_id')
+            ->pluck('completed_count', 'user_id');
+
+        $lastActivePerStudent = MaterialProgress::whereIn('material_id', $allMaterialIds)
+            ->whereIn('user_id', $enrolledStudentIds)
+            ->selectRaw('user_id, MAX(updated_at) as last_active')
+            ->groupBy('user_id')
+            ->pluck('last_active', 'user_id');
+
+        $totalMat = max($allMaterialIds->count(), 1);
+
+        $leastActiveStudents = User::whereIn('id', $enrolledStudentIds)
+            ->get()
+            ->map(function ($user) use ($allCompletedCounts, $lastActivePerStudent, $totalMat) {
+                $user->completed_count  = $allCompletedCounts[$user->id] ?? 0;
+                $user->last_active      = $lastActivePerStudent[$user->id] ?? null;
+                $user->progress_percent = round($user->completed_count / $totalMat * 100);
+                return $user;
+            })
+            ->sortBy('completed_count')
+            ->take(5)
+            ->values();
+
         return view('teacher.dashboard', compact(
+            'stats',
             'courses',
-            'totalStudents',
-            'totalAssignments',
+            'pendingApprovals',
             'pendingSubmissions',
+            'mostActiveStudents',
+            'leastActiveStudents',
         ));
     }
 
@@ -306,46 +441,106 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Ambil Kursus yang diikuti (Enrollments)
+        // ── ENROLLED COURSES ───────────────────────────────────
         $enrolledCourses = CourseEnrollment::with(['course.teacher', 'course.modules.materials'])
             ->where('user_id', $user->id)
+            ->where('status', 'approved')
             ->latest()
             ->get();
 
-        // 2. Hitung Progress Total & Rata-rata Nilai
-        $totalMaterials = 0;
+        $pendingEnrollments = CourseEnrollment::with('course.teacher')
+            ->where('user_id', $user->id)
+            ->where('status', 'pending')
+            ->latest()
+            ->get();
+
+        // ── PROGRESS PER COURSE (untuk tabel + grafik) ─────────
+        $courseProgressData = [];
+        $totalMaterials     = 0;
         $completedMaterials = 0;
-        $totalScore = 0;
-        $attemptCount = 0;
 
         foreach ($enrolledCourses as $enrollment) {
-            $course = $enrollment->course;
-            
-            // Ambil semua ID materi di kursus ini
-            $materialIds = Material::whereHas('module', fn($q) => $q->where('course_id', $course->id))->pluck('id');
-            
-            $totalMaterials += $materialIds->count();
-            $completedMaterials += MaterialProgress::where('user_id', $user->id)
+            $course      = $enrollment->course;
+            $materialIds = Material::whereHas('module',
+                fn($q) => $q->where('course_id', $course->id))->pluck('id');
+
+            $total     = $materialIds->count();
+            $completed = MaterialProgress::where('user_id', $user->id)
                 ->whereIn('material_id', $materialIds)
                 ->where('is_completed', true)
                 ->count();
+
+            $totalMaterials     += $total;
+            $completedMaterials += $completed;
+
+            $courseProgressData[] = [
+                'id'       => $course->id,
+                'title'    => $course->title,
+                'teacher'  => $course->teacher->name ?? '–',
+                'total'    => $total,
+                'completed'=> $completed,
+                'percent'  => $total > 0 ? round($completed / $total * 100) : 0,
+            ];
         }
 
-        // Hitung Rata-rata Nilai dari Quiz
-        $avgGrade = QuizAttempt::where('user_id', $user->id)->avg('score') ?? 0;
+        $overallProgress = $totalMaterials > 0
+            ? round($completedMaterials / $totalMaterials * 100)
+            : 0;
 
-        // Hitung Progress Keseluruhan (%)
-        $overallProgress = $totalMaterials > 0 ? round(($completedMaterials / $totalMaterials) * 100) : 0;
+        // ── NILAI QUIZ PER COURSE (untuk grafik bar) ───────────
+        $quizScoreData = [];
+        foreach ($enrolledCourses as $enrollment) {
+            $courseId = $enrollment->course->id;
+            $avg = QuizAttempt::where('user_id', $user->id)
+                ->whereHas('quiz', fn($q) => $q->where('course_id', $courseId))
+                ->whereNotNull('score')
+                ->avg('score');
 
-        // Hitung Total Badge
-        $totalBadges = $user->badges()->count();
+            $quizScoreData[] = [
+                'title' => Str::limit($enrollment->course->title, 20),
+                'avg'   => $avg ? round($avg, 1) : 0,
+            ];
+        }
+
+        // ── RATA-RATA NILAI KESELURUHAN ─────────────────────────
+        $avgGrade = QuizAttempt::where('user_id', $user->id)
+            ->whereNotNull('score')
+            ->avg('score') ?? 0;
+
+        // ── RECENT QUIZ ATTEMPTS (5 terbaru) ───────────────────
+        $recentAttempts = QuizAttempt::with('quiz.course')
+            ->where('user_id', $user->id)
+            ->whereNotNull('score')
+            ->latest()
+            ->limit(5)
+            ->get();
+
+        // ── AI RECOMMENDATION ──────────────────────────────────
+        $aiRecommendations = AiAnalysis::where('user_id', $user->id)
+            ->with('course')
+            ->latest()
+            ->limit(4)
+            ->get();
+
+        // ── STATS CARD ─────────────────────────────────────────
+        $stats = [
+            'total_courses'   => $enrolledCourses->count(),
+            'overall_progress'=> $overallProgress,
+            'avg_grade'       => round($avgGrade, 1),
+            'pending_count'   => $pendingEnrollments->count(),
+        ];
 
         return view('student.dashboard', compact(
             'user',
+            'stats',
             'enrolledCourses',
+            'pendingEnrollments',
+            'courseProgressData',
+            'quizScoreData',
+            'recentAttempts',
+            'aiRecommendations',
             'overallProgress',
             'avgGrade',
-            'totalBadges'
         ));
     }
 }

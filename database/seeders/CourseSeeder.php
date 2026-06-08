@@ -17,7 +17,8 @@ class CourseSeeder extends Seeder
         Course::create([
             'title' => 'Pemrograman Web',
             'description' => 'Belajar dasar-dasar pemrograman web menggunakan HTML, CSS, dan JavaScript.',
-            'teacher_id' => '2'
+            'teacher_id' => '2',
+            'course_code' => 'WEB101',
         ]);
     }
 }

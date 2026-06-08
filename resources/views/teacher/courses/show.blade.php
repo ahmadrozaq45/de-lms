@@ -36,7 +36,22 @@
             </div>
             <div style="padding:28px 32px;">
                 <h1 style="font-size:28px; font-weight:800; color:#0f172a; margin:0 0 8px 0;">{{ $course->title }}</h1>
-                <p style="font-size:15px; color:#475569; margin:0 0 20px 0; line-height:1.6;">{{ $course->description }}</p>
+                <p style="font-size:15px; color:#475569; margin:0 0 16px 0; line-height:1.6;">{{ $course->description }}</p>
+
+                {{-- Course Code Banner --}}
+                <div style="display:inline-flex; align-items:center; gap:14px; background:#eef2ff; border:1px solid #c7d2fe; border-radius:12px; padding:12px 18px; margin-bottom:16px;">
+                    <div>
+                        <div style="font-size:11px; font-weight:700; color:#6366f1; text-transform:uppercase; letter-spacing:0.8px; margin-bottom:2px;">Kode Kelas</div>
+                        <div style="font-family:monospace; font-size:22px; font-weight:800; color:#3730a3; letter-spacing:5px;">{{ $course->course_code }}</div>
+                    </div>
+                    <button onclick="copyCourseCode('{{ $course->course_code }}')" id="copy-btn-show"
+                            style="display:flex; align-items:center; gap:6px; background:#6366f1; color:white; border:none; border-radius:8px; padding:8px 14px; font-size:12px; font-weight:700; cursor:pointer; transition:background 0.2s; white-space:nowrap;"
+                            onmouseover="this.style.background='#4f46e5'" onmouseout="this.style.background='#6366f1'">
+                        <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                        Salin Kode
+                    </button>
+                </div>
+
                 <div style="display:flex; flex-wrap:wrap; align-items:center; gap:24px; font-size:14px; color:#475569; border-top:1px solid #f1f5f9; padding-top:16px;">
                     <div style="display:flex; align-items:center; gap:8px;">
                         <svg width="18" height="18" fill="none" stroke="#64748b" stroke-width="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
@@ -63,9 +78,9 @@
 
             <div style="display:flex; border-bottom:1px solid #e2e8f0; background:#f8fafc; padding:0 16px;">
                 <button class="tab-btn active" onclick="switchTab(event,'materi')">Materi</button>
-                <button class="tab-btn" onclick="switchTab(event,'diskusi')">Diskusi</button>
+                <!-- <button class="tab-btn" onclick="switchTab(event,'diskusi')">Diskusi</button> -->
                 <button class="tab-btn" onclick="switchTab(event,'tugas')">Tugas</button>
-                <button class="tab-btn" onclick="switchTab(event,'ujian')">Ujian</button>
+                <button class="tab-btn" onclick="switchTab(event,'quiz')">Quiz</button>
             </div>
 
             {{-- TAB MATERI --}}
@@ -326,19 +341,6 @@
                 @endforelse
             </div>
 
-            {{-- TAB DISKUSI --}}
-            <div id="tab-diskusi" class="tab-content" style="padding:32px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
-                    <h2 style="font-size:18px; font-weight:700; color:#1e293b; margin:0;">Forum Diskusi</h2>
-                    <span style="font-size:12px; background:#f1f5f9; color:#64748b; padding:6px 14px; border-radius:20px; font-weight:600;">Segera Hadir</span>
-                </div>
-                <div style="text-align:center; padding:48px; background:#f8fafc; border-radius:12px; border:1px dashed #cbd5e1;">
-                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#cbd5e1" stroke-width="1.5" style="margin:0 auto 16px;"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                    <p style="color:#64748b; font-size:15px; font-weight:500; margin:0 0 8px;">Forum diskusi akan segera tersedia.</p>
-                    <p style="color:#94a3b8; font-size:13px; margin:0;">Anda dapat memantau dan membalas pertanyaan siswa dari sini.</p>
-                </div>
-            </div>
-
             {{-- TAB TUGAS --}}
             <div id="tab-tugas" class="tab-content" style="padding:32px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
@@ -379,8 +381,8 @@
                 @endif
             </div>
 
-            {{-- TAB UJIAN --}}
-            <div id="tab-ujian" class="tab-content" style="padding:32px;">
+            {{-- TAB QUIZ --}}
+            <div id="tab-quiz" class="tab-content" style="padding:32px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
                     <h2 style="font-size:18px; font-weight:700; color:#1e293b; margin:0;">
                         Daftar Quiz
@@ -510,6 +512,18 @@
                         .then(editor => { editors['edit-' + materialId] = editor; });
                 }
             } else { c.classList.add('hidden'); f.classList.remove('hidden'); }
+        }
+
+        function copyCourseCode(code) {
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = document.getElementById('copy-btn-show');
+                btn.textContent = '✓ Tersalin!';
+                btn.style.background = '#16a34a';
+                setTimeout(() => {
+                    btn.innerHTML = '<svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Salin Kode';
+                    btn.style.background = '#6366f1';
+                }, 2000);
+            });
         }
     </script>
 </x-app-layout>
