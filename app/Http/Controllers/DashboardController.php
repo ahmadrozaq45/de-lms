@@ -325,33 +325,115 @@ class DashboardController extends Controller
 
     public function teacher()
     {
-        $courses   = Course::with('modules')->where('teacher_id', Auth::id())->get();
+        $teacherId = Auth::id();
+
+        // Semua course milik guru ini
+        $courses   = Course::with('modules.materials')->where('teacher_id', $teacherId)->get();
         $courseIds = $courses->pluck('id');
 
+        // ── STATS ──────────────────────────────────────────────
         $totalStudents = CourseEnrollment::whereIn('course_id', $courseIds)
             ->where('status', 'approved')
-            ->distinct('user_id')->count('user_id');
+            ->distinct('user_id')
+            ->count('user_id');
 
+        $avgClassScore = QuizAttempt::whereHas('quiz', fn($q) => $q->whereIn('course_id', $courseIds))
+            ->whereNotNull('score')
+            ->avg('score') ?? 0;
+
+        $stats = [
+            'total_courses'   => $courses->count(),
+            'total_students'  => $totalStudents,
+            'avg_class_score' => round($avgClassScore, 1),
+        ];
+
+        // ── PENDING ────────────────────────────────────────────
         $pendingApprovals = CourseEnrollment::whereIn('course_id', $courseIds)
             ->where('status', 'pending')
             ->with(['user', 'course'])
             ->latest()
             ->get();
 
-        $totalAssignments = Assignment::whereIn('course_id', $courseIds)->count();
-
-        $pendingSubmissions = Submission::whereHas('assignment.course', fn($q) => $q->whereIn('id', $courseIds))
+        $pendingSubmissions = Submission::whereHas('assignment.course',
+                fn($q) => $q->whereIn('id', $courseIds))
             ->where('status', 'pending')
-            ->with('student')
+            ->with(['student', 'assignment.course'])
             ->latest()
             ->get();
 
+        // ── SEMUA MATERIAL IDS ─────────────────────────────────
+        $allMaterialIds = Material::whereHas('module',
+            fn($q) => $q->whereIn('course_id', $courseIds))->pluck('id');
+
+        // ── ENROLLED STUDENT IDS ───────────────────────────────
+        $enrolledStudentIds = CourseEnrollment::whereIn('course_id', $courseIds)
+            ->where('status', 'approved')
+            ->pluck('user_id')
+            ->unique();
+
+        // ── STUDENT PALING AKTIF ───────────────────────────────
+        $completedPerStudent = MaterialProgress::whereIn('material_id', $allMaterialIds)
+            ->where('is_completed', true)
+            ->whereIn('user_id', $enrolledStudentIds)
+            ->selectRaw('user_id, COUNT(*) as completed_count')
+            ->groupBy('user_id')
+            ->orderByDesc('completed_count')
+            ->limit(5)
+            ->pluck('completed_count', 'user_id');
+
+        $avgScorePerStudent = QuizAttempt::whereHas('quiz',
+                fn($q) => $q->whereIn('course_id', $courseIds))
+            ->whereNotNull('score')
+            ->whereIn('user_id', $enrolledStudentIds)
+            ->selectRaw('user_id, ROUND(AVG(score), 1) as avg_score')
+            ->groupBy('user_id')
+            ->pluck('avg_score', 'user_id');
+
+        $mostActiveStudents = User::whereIn('id', $completedPerStudent->keys())
+            ->get()
+            ->map(function ($user) use ($completedPerStudent, $avgScorePerStudent) {
+                $user->completed_count = $completedPerStudent[$user->id] ?? 0;
+                $user->avg_score       = $avgScorePerStudent[$user->id] ?? null;
+                return $user;
+            })
+            ->sortByDesc('completed_count')
+            ->values();
+
+        // ── STUDENT KURANG AKTIF ───────────────────────────────
+        $allCompletedCounts = MaterialProgress::whereIn('material_id', $allMaterialIds)
+            ->where('is_completed', true)
+            ->whereIn('user_id', $enrolledStudentIds)
+            ->selectRaw('user_id, COUNT(*) as completed_count')
+            ->groupBy('user_id')
+            ->pluck('completed_count', 'user_id');
+
+        $lastActivePerStudent = MaterialProgress::whereIn('material_id', $allMaterialIds)
+            ->whereIn('user_id', $enrolledStudentIds)
+            ->selectRaw('user_id, MAX(updated_at) as last_active')
+            ->groupBy('user_id')
+            ->pluck('last_active', 'user_id');
+
+        $totalMat = max($allMaterialIds->count(), 1);
+
+        $leastActiveStudents = User::whereIn('id', $enrolledStudentIds)
+            ->get()
+            ->map(function ($user) use ($allCompletedCounts, $lastActivePerStudent, $totalMat) {
+                $user->completed_count  = $allCompletedCounts[$user->id] ?? 0;
+                $user->last_active      = $lastActivePerStudent[$user->id] ?? null;
+                $user->progress_percent = round($user->completed_count / $totalMat * 100);
+                return $user;
+            })
+            ->sortBy('completed_count')
+            ->take(5)
+            ->values();
+
         return view('teacher.dashboard', compact(
+            'stats',
             'courses',
-            'totalStudents',
-            'totalAssignments',
-            'pendingSubmissions',
             'pendingApprovals',
+            'pendingSubmissions',
+            'mostActiveStudents',
+            'leastActiveStudents',
         ));
     }
 

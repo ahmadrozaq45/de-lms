@@ -36,9 +36,6 @@
 .bar-fill  { height:100%; border-radius:99px; }
 .bar-count { font-size:12px; font-weight:700; color:#475569; width:28px; text-align:right; }
 
-/* ── Badge ── */
-.score-fail { background:#fee2e2; color:#dc2626; font-weight:700; border-radius:6px; padding:2px 8px; font-size:12px; }
-
 /* ── Avatar ── */
 .avatar { width:32px; height:32px; border-radius:50%;
           background:linear-gradient(135deg,#3b5bdb,#6366f1);
