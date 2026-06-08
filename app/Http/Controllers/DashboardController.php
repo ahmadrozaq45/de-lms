@@ -441,49 +441,104 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        // 1. Ambil Kursus yang diikuti (hanya yang sudah diapprove guru)
+        // ── ENROLLED COURSES ───────────────────────────────────
         $enrolledCourses = CourseEnrollment::with(['course.teacher', 'course.modules.materials'])
             ->where('user_id', $user->id)
             ->where('status', 'approved')
             ->latest()
             ->get();
 
-        // Permintaan pending (menunggu persetujuan)
         $pendingEnrollments = CourseEnrollment::with('course.teacher')
             ->where('user_id', $user->id)
             ->where('status', 'pending')
             ->latest()
             ->get();
 
-        // 2. Hitung Progress Total & Rata-rata Nilai
-        $totalMaterials = 0;
+        // ── PROGRESS PER COURSE (untuk tabel + grafik) ─────────
+        $courseProgressData = [];
+        $totalMaterials     = 0;
         $completedMaterials = 0;
-        $totalScore = 0;
-        $attemptCount = 0;
 
         foreach ($enrolledCourses as $enrollment) {
-            $course = $enrollment->course;
-            
-            // Ambil semua ID materi di kursus ini
-            $materialIds = Material::whereHas('module', fn($q) => $q->where('course_id', $course->id))->pluck('id');
-            
-            $totalMaterials += $materialIds->count();
-            $completedMaterials += MaterialProgress::where('user_id', $user->id)
+            $course      = $enrollment->course;
+            $materialIds = Material::whereHas('module',
+                fn($q) => $q->where('course_id', $course->id))->pluck('id');
+
+            $total     = $materialIds->count();
+            $completed = MaterialProgress::where('user_id', $user->id)
                 ->whereIn('material_id', $materialIds)
                 ->where('is_completed', true)
                 ->count();
+
+            $totalMaterials     += $total;
+            $completedMaterials += $completed;
+
+            $courseProgressData[] = [
+                'id'       => $course->id,
+                'title'    => $course->title,
+                'teacher'  => $course->teacher->name ?? '–',
+                'total'    => $total,
+                'completed'=> $completed,
+                'percent'  => $total > 0 ? round($completed / $total * 100) : 0,
+            ];
         }
 
-        // Hitung Rata-rata Nilai dari Quiz
-        $avgGrade = QuizAttempt::where('user_id', $user->id)->avg('score') ?? 0;
+        $overallProgress = $totalMaterials > 0
+            ? round($completedMaterials / $totalMaterials * 100)
+            : 0;
 
-        // Hitung Progress Keseluruhan (%)
-        $overallProgress = $totalMaterials > 0 ? round(($completedMaterials / $totalMaterials) * 100) : 0;
+        // ── NILAI QUIZ PER COURSE (untuk grafik bar) ───────────
+        $quizScoreData = [];
+        foreach ($enrolledCourses as $enrollment) {
+            $courseId = $enrollment->course->id;
+            $avg = QuizAttempt::where('user_id', $user->id)
+                ->whereHas('quiz', fn($q) => $q->where('course_id', $courseId))
+                ->whereNotNull('score')
+                ->avg('score');
+
+            $quizScoreData[] = [
+                'title' => Str::limit($enrollment->course->title, 20),
+                'avg'   => $avg ? round($avg, 1) : 0,
+            ];
+        }
+
+        // ── RATA-RATA NILAI KESELURUHAN ─────────────────────────
+        $avgGrade = QuizAttempt::where('user_id', $user->id)
+            ->whereNotNull('score')
+            ->avg('score') ?? 0;
+
+        // ── RECENT QUIZ ATTEMPTS (5 terbaru) ───────────────────
+        $recentAttempts = QuizAttempt::with('quiz.course')
+            ->where('user_id', $user->id)
+            ->whereNotNull('score')
+            ->latest()
+            ->limit(5)
+            ->get();
+
+        // ── AI RECOMMENDATION ──────────────────────────────────
+        $aiRecommendations = AiAnalysis::where('user_id', $user->id)
+            ->with('course')
+            ->latest()
+            ->limit(4)
+            ->get();
+
+        // ── STATS CARD ─────────────────────────────────────────
+        $stats = [
+            'total_courses'   => $enrolledCourses->count(),
+            'overall_progress'=> $overallProgress,
+            'avg_grade'       => round($avgGrade, 1),
+            'pending_count'   => $pendingEnrollments->count(),
+        ];
 
         return view('student.dashboard', compact(
             'user',
+            'stats',
             'enrolledCourses',
             'pendingEnrollments',
+            'courseProgressData',
+            'quizScoreData',
+            'recentAttempts',
+            'aiRecommendations',
             'overallProgress',
             'avgGrade',
         ));
