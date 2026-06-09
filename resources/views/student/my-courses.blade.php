@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Dashboard Siswa') }}
+            {{ __('My Course') }}
         </h2>
     </x-slot>
 
@@ -15,19 +15,12 @@
                     <span class="font-medium">{{ session('success') }}</span>
                 </div>
             @endif
-            @if(session('error'))
-                <div class="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl shadow-sm flex items-center gap-2">
-                    <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    <span class="font-medium">{{ session('error') }}</span>
-                </div>
-            @endif
-            
-            {{-- 🚀 Tambahan Alert untuk Eror Validasi (Silent Redirect) --}}
+
             @if($errors->any())
                 <div class="p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl shadow-sm flex flex-col gap-1">
                     <div class="flex items-center gap-2">
                         <svg class="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <span class="font-bold">Informasi:</span>
+                        <span class="font-bold">Gagal bergabung!</span>
                     </div>
                     <ul class="list-disc list-inside text-sm ml-7">
                         @foreach($errors->all() as $error)
@@ -37,47 +30,7 @@
                 </div>
             @endif
 
-            {{-- ── 1. HERO SECTION & STATISTIK ── --}}
-            <div>
-                <h1 class="text-3xl font-extrabold text-gray-900 mb-2">Selamat Datang, {{ strtoupper($user->name) }}!</h1>
-                <p class="text-gray-500 mb-8">Yuk lanjutkan pembelajaran Anda hari ini</p>
-
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                        <div class="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center mb-4">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path></svg>
-                        </div>
-                        <h3 class="text-3xl font-extrabold text-gray-900 mb-1">{{ $stats['total_courses'] ?? 0 }}</h3>
-                        <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Course Aktif</p>
-                    </div>
-
-                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                        <div class="w-10 h-10 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center mb-4">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
-                        </div>
-                        <h3 class="text-3xl font-extrabold text-gray-900 mb-1">{{ $stats['avg_grade'] ?? 0 }}%</h3>
-                        <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Rata-Rata Nilai</p>
-                    </div>
-
-                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                        <div class="w-10 h-10 rounded-lg bg-green-50 text-green-600 flex items-center justify-center mb-4">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                        <h3 class="text-3xl font-extrabold text-gray-900 mb-1">24h</h3>
-                        <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Waktu Belajar</p>
-                    </div>
-
-                    <div class="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
-                        <div class="w-10 h-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center mb-4">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z"></path></svg>
-                        </div>
-                        <h3 class="text-3xl font-extrabold text-gray-900 mb-1">{{ $stats['overall_progress'] ?? 0 }}%</h3>
-                        <p class="text-[11px] font-bold text-gray-400 uppercase tracking-wider">Progress Total</p>
-                    </div>
-                </div>
-            </div>
-
-            {{-- ── 2. GABUNG KELAS DENGAN KODE (MANUAL) ── --}}
+            {{-- ── 1. GABUNG KELAS DENGAN KODE (MANUAL) ── --}}
             <div class="bg-white p-6 rounded-2xl border border-gray-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
                     <h3 class="text-lg font-bold text-gray-800">Punya Kode Kelas Pribadi?</h3>
@@ -85,15 +38,15 @@
                 </div>
                 <form action="{{ route('student.enroll') }}" method="POST" class="flex items-center gap-3 w-full md:w-auto">
                     @csrf
-                    <input type="text" name="course_code" placeholder="Contoh: KLS-XYZ123" class="w-full md:w-64 border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 rounded-xl shadow-sm text-sm px-4 py-2.5">
+                    <input type="text" name="course_code" placeholder="Contoh: KLS-XYZ123" class="w-full md:w-64 border-gray-300 focus:border-blue-500 focus:ring focus:ring-blue-200 rounded-xl shadow-sm text-sm px-4 py-2.5" required>
                     <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-bold px-6 py-2.5 rounded-xl transition-colors shadow-sm whitespace-nowrap">
                         Gabung
                     </button>
                 </form>
             </div>
 
-            {{-- ── 3. KURSUS SAYA (YANG SUDAH DISETUJUI) ── --}}
-            <div id="my-courses" class="scroll-mt-8">
+            {{-- ── 2. KURSUS SAYA (YANG SUDAH DISETUJUI) ── --}}
+            <div>
                 <h2 class="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Course Saya</h2>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     @forelse($enrolledCourses as $enrollment)
@@ -108,7 +61,6 @@
                                 </h3>
                                 <p class="text-xs text-gray-500 mb-4">Pengajar: <span class="font-semibold text-gray-700">{{ $enrollment->course->teacher->name ?? 'Pengajar' }}</span></p>
                                 
-                                {{-- Cari data progress dari array controller --}}
                                 @php
                                     $progressPercent = 0;
                                     foreach($courseProgressData as $cp) {
@@ -132,20 +84,20 @@
                             </div>
                         </div>
                     @empty
-                        <div class="col-span-full bg-amber-50/50 rounded-2xl border border-dashed border-amber-200 p-12 text-center w-full">
-                            <div class="mx-auto bg-white rounded-2xl flex items-center justify-center mb-4 shadow-sm border border-amber-100" style="width: 64px; height: 64px;">
-                                <svg width="32" height="32" class="text-amber-700" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                        <div class="col-span-full bg-gray-50/50 rounded-2xl border border-dashed border-gray-200 p-12 text-center w-full">
+                            <div class="mx-auto bg-white rounded-2xl flex items-center justify-center mb-4 shadow-sm border border-gray-100" style="width: 56px; height: 56px;">
+                                <svg width="28" height="28" class="text-gray-800" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 006 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 016 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 016-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0018 18a8.967 8.967 0 00-6 2.292m0-14.25v14.25"></path>
                                 </svg>
                             </div>
-                            <h4 class="text-amber-800 font-bold mb-1">Belum Ada Kursus</h4>
-                            <p class="text-sm text-amber-700/70">Anda belum terdaftar di kursus manapun. Gabung dengan memasukkan kode atau pilih dari daftar di bawah!</p>
+                            <h4 class="text-gray-900 font-bold mb-1">Belum Ada Kursus</h4>
+                            <p class="text-sm text-gray-500">Anda belum terdaftar di kursus manapun. Gabung dengan memasukkan kode atau pilih dari daftar di bawah!</p>
                         </div>
                     @endforelse
                 </div>
             </div>
 
-            {{-- ── 4. MENUNGGU PERSETUJUAN (PENDING) ── --}}
+            {{-- ── 3. MENUNGGU PERSETUJUAN (PENDING) ── --}}
             @if($pendingEnrollments->count() > 0)
                 <div>
                     <h2 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Menunggu Persetujuan Guru</h2>
@@ -165,11 +117,10 @@
                 </div>
             @endif
 
-            {{-- ── 5. EKSPLORASI KURSUS TERSEDIA ── --}}
+            {{-- ── 4. EKSPLORASI KURSUS TERSEDIA ── --}}
             <div class="pt-4 border-t border-gray-200">
                 <div class="flex items-center justify-between mb-6">
                     <h2 class="text-xl font-bold text-gray-800">Eksplorasi Kursus</h2>
-                    <p class="text-sm text-gray-500 hidden sm:block">Temukan dan ikuti kelas baru hanya dengan satu klik</p>
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -201,8 +152,8 @@
                             <div class="px-6 py-4 bg-gray-50 border-t border-gray-100">
                                 <form action="{{ route('student.enroll') }}" method="POST">
                                     @csrf
-                                    {{-- 🚀 INI DIA PERBAIKANNYA --}}
                                     <input type="hidden" name="course_code" value="{{ $course->code ?? $course->course_code }}">
+                                    
                                     <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-bold py-2.5 rounded-lg transition-colors shadow-sm flex items-center justify-center gap-2">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"></path></svg>
                                         Gabung Kelas

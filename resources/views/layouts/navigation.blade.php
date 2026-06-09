@@ -26,10 +26,10 @@
                     ['label'=>'Setting',   'route'=>'settings.index',         'match'=>'settings.*'],
                 ],
                 'student' => [
-                    ['label'=>'Dashboard', 'route'=>'student.dashboard','match'=>'student.dashboard'],
-                    ['label'=>'My Course', 'route'=>'student.dashboard','match'=>'student.courses.*'],
-                    ['label'=>'Report',    'route'=>'student.report',   'match'=>'student.report'],
-                    ['label'=>'Setting',   'route'=>'settings.index',   'match'=>'settings.*'],
+                    ['label'=>'Dashboard', 'route'=>'student.dashboard',    'match'=>'student.dashboard'],
+                    ['label'=>'My Course', 'route'=>'student.courses.index','match'=>'student.courses.*'],
+                    ['label'=>'Report',    'route'=>'student.report',       'match'=>'student.report'],
+                    ['label'=>'Setting',   'route'=>'settings.index',       'match'=>'settings.*'],
                 ],
                 default => [],
             };

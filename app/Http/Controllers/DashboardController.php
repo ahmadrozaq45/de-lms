@@ -497,7 +497,7 @@ class DashboardController extends Controller
                 ->avg('score');
 
             $quizScoreData[] = [
-                'title' => Str::limit($enrollment->course->title, 20),
+                'title' => \Illuminate\Support\Str::limit($enrollment->course->title, 20),
                 'avg'   => $avg ? round($avg, 1) : 0,
             ];
         }
@@ -530,6 +530,15 @@ class DashboardController extends Controller
             'pending_count'   => $pendingEnrollments->count(),
         ];
 
+        // 🚀 AMBIL DATA KURSUS YANG BELUM DIIKUTI SISWA ATAU SEDANG PENDING
+        $enrolledAndPendingCourseIds = CourseEnrollment::where('user_id', $user->id)->pluck('course_id');
+        
+        $availableCourses = Course::whereNotIn('id', $enrolledAndPendingCourseIds)
+            ->with(['teacher', 'modules'])
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        // 🚀 PASTIKAN 'availableCourses' SUDAH MASUK DI DALAM COMPACT
         return view('student.dashboard', compact(
             'user',
             'stats',
@@ -541,6 +550,7 @@ class DashboardController extends Controller
             'aiRecommendations',
             'overallProgress',
             'avgGrade',
+            'availableCourses' 
         ));
     }
 }

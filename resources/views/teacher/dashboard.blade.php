@@ -217,7 +217,7 @@
                         </div>
                     </div>
                 </div>
-                <form action="{{ route('teacher.enrollments.approve', $enrollment->id) }}"
+                <form action="{{ route('teacher.courses.students.approve', [$enrollment->course_id, $enrollment->id]) }}"
                       method="POST" style="display:inline;">
                     @csrf @method('PATCH')
                     <button type="submit"

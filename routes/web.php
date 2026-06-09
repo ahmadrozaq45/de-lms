@@ -112,6 +112,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/report',    [ReportController::class, 'student'])->name('report');
         Route::post('/enroll', [EnrollmentController::class, 'store'])->name('enroll');
 
+        Route::get('/courses',                       [CourseController::class, 'myCourses'])
+             ->name('courses.index');
         Route::get('/courses/{id}',                  [CourseController::class, 'show'])
              ->name('courses.show');
         Route::get('/materials/{id}',                [MaterialController::class, 'show'])
