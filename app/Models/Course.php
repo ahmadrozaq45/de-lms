@@ -3,7 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\{BelongsTo, HasMany};
+use Illuminate\Database\Eloquent\Relations\{BelongsTo, HasMany, BelongsToMany};
 use App\Models\Quiz;
 use Illuminate\Support\Str;
 
@@ -40,5 +40,10 @@ class Course extends Model
     public function quizzes(): HasMany
     {
         return $this->hasMany(Quiz::class);
+    }
+
+    public function categories(): BelongsToMany
+    {
+        return $this->belongsToMany(Categories::class, 'category_id');
     }
 }

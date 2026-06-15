@@ -19,9 +19,8 @@ class DatabaseSeeder extends Seeder
 
         $this->call([
             UserSeeder::class,     // 1. Buat User (Admin, Guru, Siswa) duluan
+            CategoriesSeeder::class, // 3. Buat Kategori
             CourseSeeder::class,   // 2. Buat Kelas (Induk materi)
-            //ModuleSeeder::class,   // 3. Buat Modul (Anak dari kelas)
-            //MaterialSeeder::class, // 4. Buat Materi (Anak dari modul)
          ]);
 
         User::factory()->create([
