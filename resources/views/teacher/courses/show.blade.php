@@ -104,8 +104,6 @@
                             <div style="display:flex; align-items:center; gap:6px;">
                                 <button onclick="toggleModal('modal-material-{{ $module->id }}')"
                                         style="background:#dcfce7; color:#16a34a; font-size:12px; font-weight:700; padding:5px 12px; border-radius:7px; border:none; cursor:pointer;">+ Materi</button>
-                                <button onclick="toggleModal('modal-assignment-{{ $module->id }}')"
-                                        style="background:#ede9fe; color:#6d28d9; font-size:12px; font-weight:700; padding:5px 12px; border-radius:7px; border:none; cursor:pointer;">+ Tugas</button>
                                 <button onclick="toggleModal('modal-edit-modul-{{ $module->id }}')"
                                         style="background:#fef9c3; color:#a16207; padding:5px 9px; border-radius:7px; border:none; cursor:pointer;">
                                     <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
@@ -142,7 +140,6 @@
                                                 <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
                                             </button>
                                         </form>
-                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
                                     </div>
                                 </div>
 
@@ -194,24 +191,6 @@
                             @empty
                                 <p style="color:#94a3b8; font-size:13px; font-style:italic; padding:4px 2px;">Belum ada materi di modul ini.</p>
                             @endforelse
-
-                            @foreach($module->assignments as $assignment)
-                                <div class="materi-item" style="display:flex; align-items:center; gap:14px; padding:12px 14px; border:1px solid #e0e7ff; border-radius:10px; background:#fafafe; border-left:3px solid #6366f1;">
-                                    <div style="width:36px; height:36px; background:#f5f3ff; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                    </div>
-                                    <div style="flex:1;">
-                                        <div style="font-size:14px; font-weight:700; color:#1e1b4b; margin-bottom:3px;">
-                                            <span style="font-size:10px; background:#eeebff; color:#6366f1; padding:1px 6px; border-radius:4px; margin-right:4px;">TUGAS</span>
-                                            {{ $assignment->title }}
-                                        </div>
-                                        <div style="font-size:12px; color:#64748b;">
-                                            Tenggat: <span style="color:#ef4444; font-weight:600;">{{ \Carbon\Carbon::parse($assignment->due_date)->format('d M Y, H:i') }}</span>
-                                        </div>
-                                    </div>
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
-                                </div>
-                            @endforeach
                         </div>
                     </div>
 
@@ -253,48 +232,6 @@
                                     <div class="px-8 py-5 bg-gray-50 flex flex-row-reverse gap-3">
                                         <button type="submit" class="bg-blue-600 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-blue-700 transition">Simpan</button>
                                         <button type="button" onclick="toggleModal('modal-material-{{ $module->id }}')" class="bg-white text-gray-600 px-8 py-2.5 rounded-xl font-bold border border-gray-200 hover:bg-gray-100 transition">Batal</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
-                    {{-- MODAL TAMBAH TUGAS --}}
-                    <div id="modal-assignment-{{ $module->id }}" class="fixed inset-0 z-50 hidden overflow-y-auto">
-                        <div class="flex items-center justify-center min-h-screen p-4">
-                            <div class="fixed inset-0 bg-gray-900 bg-opacity-60" onclick="toggleModal('modal-assignment-{{ $module->id }}')"></div>
-                            <div class="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden text-left">
-                                <form action="{{ route('teacher.modules.assignments.store', $module->id) }}" method="POST">
-                                    @csrf
-                                    <div class="px-8 py-5 border-b border-gray-100 flex justify-between items-center">
-                                        <h3 class="text-xl font-bold">Tambah Tugas ke: {{ $module->title }}</h3>
-                                        <button type="button" onclick="toggleModal('modal-assignment-{{ $module->id }}')" class="text-gray-400 hover:text-gray-600">
-                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                        </button>
-                                    </div>
-                                    <div class="p-8 space-y-5">
-                                        <div>
-                                            <label class="block text-sm font-bold text-gray-700 mb-2">Judul Tugas</label>
-                                            <input type="text" name="title" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3" placeholder="Contoh: Tugas 1: Analisis Sistem" required>
-                                        </div>
-                                        <div>
-                                            <label class="block text-sm font-bold text-gray-700 mb-2">Instruksi <span class="text-red-500">*</span></label>
-                                            <textarea name="description" rows="4" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" placeholder="Tuliskan petunjuk pengerjaan..." required></textarea>
-                                        </div>
-                                        <div class="grid grid-cols-2 gap-4">
-                                            <div>
-                                                <label class="block text-sm font-bold text-gray-700 mb-2">Tenggat Waktu</label>
-                                                <input type="datetime-local" name="due_date" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3" required>
-                                            </div>
-                                            <div>
-                                                <label class="block text-sm font-bold text-gray-700 mb-2">Nilai Maksimal</label>
-                                                <input type="number" name="max_score" min="1" max="100" value="100" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3" required>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="px-8 py-5 bg-gray-50 flex flex-row-reverse gap-3">
-                                        <button type="submit" class="bg-indigo-600 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition">Simpan Tugas</button>
-                                        <button type="button" onclick="toggleModal('modal-assignment-{{ $module->id }}')" class="bg-white text-gray-600 px-8 py-2.5 rounded-xl font-bold border border-gray-200 hover:bg-gray-100 transition">Batal</button>
                                     </div>
                                 </form>
                             </div>
@@ -344,41 +281,94 @@
             {{-- TAB TUGAS --}}
             <div id="tab-tugas" class="tab-content" style="padding:32px;">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
-                    <h2 style="font-size:18px; font-weight:700; color:#1e293b; margin:0;">Daftar Tugas</h2>
+                    <h2 style="font-size:18px; font-weight:700; color:#1e293b; margin:0;">Kelola Tugas per Modul</h2>
                     <span style="font-size:13px; color:#64748b;">Total: <strong>{{ $course->modules->sum(fn($m) => $m->assignments->count()) }}</strong> tugas</span>
                 </div>
 
-                @php $hasAssignment = false; @endphp
-                @foreach ($course->modules as $module)
-                    @foreach ($module->assignments as $assignment)
-                        @php $hasAssignment = true; @endphp
-                        <div style="background:white; border:1px solid #e2e8f0; border-radius:12px; padding:20px 24px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center;">
-                            <div style="flex:1;">
-                                <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
-                                    <span style="font-size:10px; font-weight:700; background:#f5f3ff; color:#6366f1; padding:2px 8px; border-radius:4px; border:1px solid #e0e7ff;">{{ $module->title }}</span>
-                                    <h4 style="font-size:16px; font-weight:700; color:#1e293b; margin:0;">{{ $assignment->title }}</h4>
+                @forelse ($course->modules as $module)
+                    <div style="margin-bottom:24px; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden;">
+                        <div style="background:#f8fafc; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #e2e8f0;">
+                            <h3 style="font-size:15px; font-weight:700; color:#1e293b; margin:0; display:flex; align-items:center; gap:8px;">
+                                <span style="width:8px; height:8px; background:#6d28d9; border-radius:50%; flex-shrink:0;"></span>
+                                Modul: {{ $module->title }}
+                            </h3>
+                            <button onclick="toggleModal('modal-assignment-{{ $module->id }}')"
+                                    style="background:#ede9fe; color:#6d28d9; font-size:12px; font-weight:700; padding:5px 12px; border-radius:7px; border:none; cursor:pointer;">
+                                + Tugas
+                            </button>
+                        </div>
+
+                        <div style="padding:14px 18px; display:flex; flex-direction:column; gap:8px;">
+                            @forelse($module->assignments as $assignment)
+                                <div class="materi-item" style="display:flex; align-items:center; gap:14px; padding:12px 14px; border:1px solid #e0e7ff; border-radius:10px; background:#fafafe; border-left:3px solid #6366f1;">
+                                    <div style="width:36px; height:36px; background:#f5f3ff; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    </div>
+                                    <div style="flex:1;">
+                                        <div style="font-size:14px; font-weight:700; color:#1e1b4b; margin-bottom:3px;">
+                                            {{ $assignment->title }}
+                                        </div>
+                                        <div style="font-size:12px; color:#64748b;">
+                                            Tenggat: <span style="color:#ef4444; font-weight:600;">{{ \Carbon\Carbon::parse($assignment->due_date)->format('d M Y, H:i') }}</span>
+                                        </div>
+                                    </div>
+                                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px; margin-left:20px; flex-shrink:0;">
+                                        <span style="font-size:12px; color:#94a3b8;">Skor Maks: <strong style="color:#475569;">{{ $assignment->max_score ?? 100 }}</strong></span>
+                                    </div>
                                 </div>
-                                <p style="font-size:13px; color:#64748b; margin:0 0 6px 0;">{{ $assignment->instructions ?? $assignment->description ?? 'Silakan baca instruksi pada detail tugas.' }}</p>
-                                <span style="font-size:12px; color:#94a3b8;">Skor Maks: <strong style="color:#475569;">{{ $assignment->max_score ?? 100 }}</strong></span>
-                            </div>
-                            <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px; margin-left:20px; flex-shrink:0;">
-                                <span style="background:#fffbeb; color:#d97706; font-size:12px; font-weight:700; padding:5px 14px; border-radius:8px; border:1px solid #fef3c7;">
-                                    Tenggat: {{ \Carbon\Carbon::parse($assignment->due_date)->format('d M Y, H:i') }}
-                                </span>
-                                <span style="background:#dcfce7; color:#16a34a; font-size:12px; font-weight:600; padding:4px 12px; border-radius:8px;">
-                                    0 Pengumpulan
-                                </span>
+                            @empty
+                                <p style="color:#94a3b8; font-size:13px; font-style:italic; padding:4px 2px;">Belum ada tugas di modul ini.</p>
+                            @endforelse
+                        </div>
+
+                        {{-- MODAL TAMBAH TUGAS --}}
+                        <div id="modal-assignment-{{ $module->id }}" class="fixed inset-0 z-50 hidden overflow-y-auto">
+                            <div class="flex items-center justify-center min-h-screen p-4">
+                                <div class="fixed inset-0 bg-gray-900 bg-opacity-60" onclick="toggleModal('modal-assignment-{{ $module->id }}')"></div>
+                                <div class="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden text-left">
+                                    <form action="{{ route('teacher.modules.assignments.store', $module->id) }}" method="POST">
+                                        @csrf
+                                        <div class="px-8 py-5 border-b border-gray-100 flex justify-between items-center">
+                                            <h3 class="text-xl font-bold">Tambah Tugas ke: {{ $module->title }}</h3>
+                                            <button type="button" onclick="toggleModal('modal-assignment-{{ $module->id }}')" class="text-gray-400 hover:text-gray-600">
+                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </div>
+                                        <div class="p-8 space-y-5">
+                                            <div>
+                                                <label class="block text-sm font-bold text-gray-700 mb-2">Judul Tugas</label>
+                                                <input type="text" name="title" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3" placeholder="Contoh: Tugas 1: Analisis Sistem" required>
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-bold text-gray-700 mb-2">Instruksi <span class="text-red-500">*</span></label>
+                                                <textarea name="description" rows="4" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" placeholder="Tuliskan petunjuk pengerjaan..." required></textarea>
+                                            </div>
+                                            <div class="grid grid-cols-2 gap-4">
+                                                <div>
+                                                    <label class="block text-sm font-bold text-gray-700 mb-2">Tenggat Waktu</label>
+                                                    <input type="datetime-local" name="due_date" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3" required>
+                                                </div>
+                                                <div>
+                                                    <label class="block text-sm font-bold text-gray-700 mb-2">Nilai Maksimal</label>
+                                                    <input type="number" name="max_score" min="1" max="100" value="100" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3" required>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="px-8 py-5 bg-gray-50 flex flex-row-reverse gap-3">
+                                            <button type="submit" class="bg-indigo-600 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition">Simpan Tugas</button>
+                                            <button type="button" onclick="toggleModal('modal-assignment-{{ $module->id }}')" class="bg-white text-gray-600 px-8 py-2.5 rounded-xl font-bold border border-gray-200 hover:bg-gray-100 transition">Batal</button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
                         </div>
-                    @endforeach
-                @endforeach
-
-                @if(!$hasAssignment)
-                    <div style="text-align:center; padding:48px; background:#f8fafc; border-radius:12px; border:1px dashed #cbd5e1;">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="margin:0 auto 16px;"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                        <p style="color:#64748b; font-weight:500; margin:0;">Belum ada tugas. Tambahkan melalui tab Materi.</p>
                     </div>
-                @endif
+                @empty
+                    <div style="text-align:center; padding:48px; background:#f8fafc; border-radius:12px; border:1px dashed #cbd5e1;">
+                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="margin:0 auto 16px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                        <p style="color:#64748b; font-weight:500;">Belum ada modul. Buat modul terlebih dahulu di tab Materi untuk menambahkan tugas.</p>
+                    </div>
+                @endforelse
             </div>
 
             {{-- TAB QUIZ --}}
