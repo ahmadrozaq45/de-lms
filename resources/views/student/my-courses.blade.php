@@ -123,6 +123,26 @@
                     <h2 class="text-xl font-bold text-gray-800">Eksplorasi Kursus</h2>
                 </div>
 
+                @if($categories->count() > 0)
+                <div class="flex gap-2 overflow-x-auto pb-4 mb-2 scrollbar-hide">
+                    {{-- Tombol Semua Kategori --}}
+                    <a href="{{ route('student.courses.index') }}#eksplorasi" 
+                       class="whitespace-nowrap px-4 py-2 rounded-full text-sm font-bold border transition-colors shadow-sm 
+                              {{ empty($selectedCategory) ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50' }}">
+                        Semua Kategori
+                    </a>
+                    
+                    {{-- Loop data kategori dari database --}}
+                    @foreach($categories as $cat)
+                        <a href="{{ route('student.courses.index', ['category' => $cat->id]) }}#eksplorasi" 
+                           class="whitespace-nowrap px-4 py-2 rounded-full text-sm font-bold border transition-colors shadow-sm 
+                                  {{ $selectedCategory == $cat->id ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50' }}">
+                            {{ $cat->name ?? $cat->nama_kategori }} {{-- Sesuaikan kolom nama kategori --}}
+                        </a>
+                    @endforeach
+                </div>
+                @endif
+
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                     @forelse($availableCourses as $course)
                         <div class="bg-white rounded-2xl border border-gray-200 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between overflow-hidden">

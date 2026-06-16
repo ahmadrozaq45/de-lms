@@ -170,14 +170,36 @@ class CourseController extends Controller
             ];
         }
 
-        // 4. Ambil data kursus yang BELUM diikuti (Untuk Eksplorasi)
-        $enrolledAndPendingCourseIds = \App\Models\CourseEnrollment::where('user_id', $user->id)->pluck('course_id');
-        $availableCourses = \App\Models\Course::whereNotIn('id', $enrolledAndPendingCourseIds)
-            ->with(['teacher', 'modules'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+        // 4. Ambil data semua kategori untuk ditampilkan di tombol filter
+        $categories = \App\Models\Categories::all();
 
-        // 5. Arahkan ke file view my-courses
-        return view('student.my-courses', compact('enrolledCourses', 'pendingEnrollments', 'courseProgressData', 'availableCourses'));
+        // Tangkap parameter 'category' dari URL jika tombol filter diklik
+        $selectedCategory = request('category');
+
+        // Ambil ID kursus yang SUDAH diikuti atau sedang PENDING agar tidak muncul di Eksplorasi
+        $enrolledAndPendingCourseIds = \App\Models\CourseEnrollment::where('user_id', $user->id)->pluck('course_id');
+
+        // 5. Ambil data kursus yang BELUM diikuti (Untuk Eksplorasi) + Filter
+        $availableCoursesQuery = \App\Models\Course::whereNotIn('id', $enrolledAndPendingCourseIds)
+            ->with(['teacher', 'modules'])
+            ->orderBy('created_at', 'desc');
+
+        // Jika ada filter kategori yang dipilih, saring datanya
+        if ($selectedCategory) {
+            // Catatan: Menggunakan 'categories_id' sesuai nama file migration Ahmad
+            $availableCoursesQuery->where('category_id', $selectedCategory); 
+        }
+
+        $availableCourses = $availableCoursesQuery->get();
+
+        // 6. Arahkan ke file view my-courses dengan data tambahan
+        return view('student.my-courses', compact(
+            'enrolledCourses', 
+            'pendingEnrollments', 
+            'courseProgressData', 
+            'availableCourses', 
+            'categories', 
+            'selectedCategory'
+        ));
     }
 }

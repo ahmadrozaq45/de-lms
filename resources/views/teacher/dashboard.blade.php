@@ -219,7 +219,7 @@
                 </div>
                 <form action="{{ route('teacher.courses.students.approve', [$enrollment->course_id, $enrollment->id]) }}"
                       method="POST" style="display:inline;">
-                    @csrf @method('PATCH')
+                    @csrf
                     <button type="submit"
                             style="background:#3b5bdb; color:white; border:none; padding:5px 12px;
                                    border-radius:7px; font-size:11px; font-weight:700; cursor:pointer;">
