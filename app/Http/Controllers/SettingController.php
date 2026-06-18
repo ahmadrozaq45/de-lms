@@ -13,11 +13,14 @@ class SettingController extends Controller
     {
         $user = Auth::user();
 
-        // Setting admin (hanya diload jika admin)
         $appSettings = [];
         if ($user->role === 'admin') {
             $appSettings = Setting::getMany([
-                'ai_provider', 'ai_api_key', 'ai_model',
+                'ai_provider',
+                'ai_api_key_anthropic', 'ai_model_anthropic',
+                'ai_api_key_gemini',    'ai_model_gemini',
+                'ai_api_key_groq',      'ai_model_groq',
+                'ai_api_key_openai',    'ai_model_openai',
                 'theme_color', 'theme_mode',
                 'lp_title', 'lp_subtitle', 'lp_show_courses',
                 'cert_enabled', 'cert_issuer_name', 'cert_footer_text',
@@ -90,20 +93,29 @@ class SettingController extends Controller
         $this->authorizeAdmin();
 
         $request->validate([
-            'ai_provider' => 'required|in:anthropic,gemini,groq,openai',
-            'ai_api_key'  => 'nullable|string|max:500',
-            'ai_model'    => 'required|string|max:100',
+            'ai_provider'          => 'required|in:anthropic,gemini,groq,openai',
+            'ai_api_key_anthropic' => 'nullable|string|max:500',
+            'ai_api_key_gemini'    => 'nullable|string|max:500',
+            'ai_api_key_groq'      => 'nullable|string|max:500',
+            'ai_api_key_openai'    => 'nullable|string|max:500',
+            'ai_model_anthropic'   => 'required|string|max:100',
+            'ai_model_gemini'      => 'required|string|max:100',
+            'ai_model_groq'        => 'required|string|max:100',
+            'ai_model_openai'      => 'required|string|max:100',
         ]);
 
         Setting::set('ai_provider', $request->ai_provider);
-        Setting::set('ai_api_key',  $request->ai_api_key ?? '');
-        Setting::set('ai_model',    $request->ai_model);
+
+        foreach (['anthropic', 'gemini', 'groq', 'openai'] as $provider) {
+            Setting::set("ai_api_key_{$provider}", $request->input("ai_api_key_{$provider}", ''));
+            Setting::set("ai_model_{$provider}",   $request->input("ai_model_{$provider}", ''));
+        }
 
         return redirect()->route('settings.index')
             ->with('success', 'Pengaturan API berhasil disimpan.')
             ->with('tab', 'api');
     }
-    
+
     // ── Admin: Theme Setting ─────────────────────────────────────────────────
 
     public function updateTheme(Request $request)

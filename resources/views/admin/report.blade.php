@@ -10,11 +10,27 @@
 .stat-box-lbl { font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; margin-top:2px; }
 
 /* Filter bar */
-.filter-bar   { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; align-items:center; }
-.filter-bar select, .filter-bar input {
+.filter-bar   { display:flex; gap:12px; flex-wrap:wrap; align-items:flex-end; }
+.filter-bar select, .filter-bar input[type="text"], .filter-bar input[type="date"] {
     padding:8px 12px; border:1.5px solid #e2e8f0; border-radius:9px;
-    font-size:13px; outline:none; background:white; color:#1e293b; }
-.filter-bar select:focus, .filter-bar input:focus { border-color:#3b5bdb; }
+    font-size:13px; outline:none; background:white; color:#1e293b; height:38px; }
+.filter-bar select:focus,
+.filter-bar input[type="text"]:focus,
+.filter-bar input[type="date"]:focus { border-color:#3b5bdb; }
+
+/* Filter group */
+.filter-group       { display:flex; flex-direction:column; gap:5px; }
+.filter-group-label { font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase; padding-left:2px; }
+
+/* Input dengan icon search */
+.input-icon-wrap { position:relative; }
+.input-icon-wrap svg { position:absolute; left:10px; top:50%; transform:translateY(-50%); pointer-events:none; }
+.input-icon-wrap input { padding-left:30px; }
+
+/* Separator antar group filter */
+.filter-separator {
+    width:1px; background:#e2e8f0; align-self:stretch; margin:0 2px;
+}
 
 /* Table */
 .rp-table     { width:100%; border-collapse:collapse; font-size:13px; }
@@ -65,6 +81,13 @@
 /* Submission stats */
 .sub-chips { display:flex; gap:8px; flex-wrap:wrap; }
 .sub-chip  { font-size:12px; font-weight:700; padding:3px 10px; border-radius:99px; }
+
+/* Active filter chip */
+.active-filter-chip {
+    display:inline-flex; align-items:center; gap:5px;
+    background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8;
+    font-size:11px; font-weight:700; padding:3px 9px; border-radius:99px;
+}
 </style>
 
 <div class="rp-wrap">
@@ -86,13 +109,13 @@
     {{-- Summary Stats --}}
     <div class="stat-mini">
         @foreach([
-            ['Total User',        $totalUsers,         '#3b5bdb'],
-            ['Siswa',             $totalStudents,       '#16a34a'],
-            ['Guru',              $totalTeachers,       '#1d4ed8'],
-            ['Kursus',            $totalCourses,        '#7c3aed'],
-            ['Enrollment Aktif',  $totalEnrollments,    '#0891b2'],
-            ['Submission',        $totalSubmissions,    '#d97706'],
-            ['Quiz Attempts',     $totalQuizAttempts,   '#dc2626'],
+            ['Total User',        $totalUsers,          '#3b5bdb'],
+            ['Siswa',             $totalStudents,        '#16a34a'],
+            ['Guru',              $totalTeachers,        '#1d4ed8'],
+            ['Kursus',            $totalCourses,         '#7c3aed'],
+            ['Enrollment Aktif',  $totalEnrollments,     '#0891b2'],
+            ['Submission',        $totalSubmissions,     '#d97706'],
+            ['Quiz Attempts',     $totalQuizAttempts,    '#dc2626'],
             ['Rata-rata Nilai',   round($avgQuizScore,1),'#059669'],
         ] as [$lbl, $val, $clr])
         <div class="stat-box">
@@ -119,50 +142,145 @@
     </div>
 
     {{-- Filter --}}
-    <div class="rp-card" style="padding:14px 20px; margin-bottom:16px;">
-        <div class="filter-bar">
-            <div style="position:relative;">
-                <svg width="13" height="13" fill="none" stroke="#94a3b8" stroke-width="2" viewBox="0 0 24 24"
-                     style="position:absolute; left:10px; top:50%; transform:translateY(-50%);">
-                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-                <input type="text" id="filterName" placeholder="Cari nama siswa/guru..."
-                       style="padding-left:30px; min-width:220px;" oninput="filterTable()">
+    <div class="rp-card" style="padding:16px 20px; margin-bottom:16px;">
+        <p class="sec-title" style="margin-bottom:14px;">Filter Data</p>
+        <form method="GET" action="{{ route('admin.report') }}" id="filterForm">
+            <div class="filter-bar">
+
+                {{-- Filter Nama Siswa --}}
+                <div class="filter-group">
+                    <span class="filter-group-label">Nama Siswa</span>
+                    <div class="input-icon-wrap">
+                        <svg width="13" height="13" fill="none" stroke="#94a3b8" stroke-width="2" viewBox="0 0 24 24">
+                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <input type="text" name="filter_siswa"
+                               placeholder="Cari nama siswa..."
+                               value="{{ $filterSiswa }}"
+                               style="min-width:190px;"
+                               oninput="debounceSubmit()">
+                    </div>
+                </div>
+
+                {{-- Filter Nama Guru --}}
+                <div class="filter-group">
+                    <span class="filter-group-label">Nama Guru</span>
+                    <div class="input-icon-wrap">
+                        <svg width="13" height="13" fill="none" stroke="#94a3b8" stroke-width="2" viewBox="0 0 24 24">
+                            <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                        </svg>
+                        <input type="text" name="filter_guru"
+                               placeholder="Cari nama guru..."
+                               value="{{ $filterGuru }}"
+                               style="min-width:190px;"
+                               oninput="debounceSubmit()">
+                    </div>
+                </div>
+
+                {{-- Separator --}}
+                <div class="filter-separator"></div>
+
+                {{-- Filter Tanggal Kursus Dibuat: Dari --}}
+                <div class="filter-group">
+                    <span class="filter-group-label">Kursus Dibuat: Dari</span>
+                    <input type="date" name="filter_date_from"
+                           value="{{ $filterDateFrom }}"
+                           max="{{ $filterDateTo ?: date('Y-m-d') }}"
+                           onchange="document.getElementById('filterForm').submit()">
+                </div>
+
+                {{-- Filter Tanggal Kursus Dibuat: Sampai --}}
+                <div class="filter-group">
+                    <span class="filter-group-label">Sampai</span>
+                    <input type="date" name="filter_date_to"
+                           value="{{ $filterDateTo }}"
+                           min="{{ $filterDateFrom ?: '' }}"
+                           max="{{ date('Y-m-d') }}"
+                           onchange="document.getElementById('filterForm').submit()">
+                </div>
+
+                {{-- Filter Status AI (client-side) --}}
+                <div class="filter-group">
+                    <span class="filter-group-label">Status AI</span>
+                    <select id="filterAi" onchange="filterClientSide()">
+                        <option value="">Semua Status</option>
+                        <option value="on_track">On Track</option>
+                        <option value="at_risk">At Risk</option>
+                        <option value="completed">Completed</option>
+                    </select>
+                </div>
+
+                {{-- Tombol Reset --}}
+                <div class="filter-group">
+                    <span class="filter-group-label" style="visibility:hidden;">–</span>
+                    <a href="{{ route('admin.report') }}"
+                       style="display:inline-flex; align-items:center; height:38px; padding:0 14px;
+                              border:1px solid #e2e8f0; border-radius:9px; font-size:13px;
+                              color:#64748b; background:white; cursor:pointer; text-decoration:none;">
+                        Reset
+                    </a>
+                </div>
+
             </div>
-            <select id="filterCourse" onchange="filterTable()">
-                <option value="">Semua Kursus</option>
-                @foreach($topCourses as $c)
-                <option value="{{ $c->id }}">{{ $c->title }}</option>
-                @endforeach
-            </select>
-            <select id="filterAi" onchange="filterTable()">
-                <option value="">Semua Status AI</option>
-                <option value="on_track">On Track</option>
-                <option value="at_risk">At Risk</option>
-                <option value="completed">Completed</option>
-            </select>
-            <button onclick="resetFilter()"
-                    style="padding:8px 14px; border:1px solid #e2e8f0; border-radius:9px;
-                           font-size:13px; color:#64748b; background:white; cursor:pointer;">
-                Reset
-            </button>
+        </form>
+
+        {{-- Chip filter aktif --}}
+        @if($filterSiswa || $filterGuru || $filterDateFrom || $filterDateTo)
+        <div style="margin-top:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+            <span style="font-size:11px; font-weight:700; color:#94a3b8; text-transform:uppercase;">Filter aktif:</span>
+            @if($filterSiswa)
+                <span class="active-filter-chip">Siswa: {{ $filterSiswa }}</span>
+            @endif
+            @if($filterGuru)
+                <span class="active-filter-chip">Guru: {{ $filterGuru }}</span>
+            @endif
+            @if($filterDateFrom || $filterDateTo)
+                <span class="active-filter-chip">
+                    Tanggal:
+                    {{ $filterDateFrom ? \Carbon\Carbon::parse($filterDateFrom)->format('d M Y') : '…' }}
+                    –
+                    {{ $filterDateTo ? \Carbon\Carbon::parse($filterDateTo)->format('d M Y') : 'sekarang' }}
+                </span>
+            @endif
+            <span style="font-size:12px; color:#64748b;">
+                — menampilkan <strong style="color:#3b5bdb;">{{ $allCourses->count() }}</strong> kursus
+            </span>
+        </div>
+        @endif
+
+        {{-- Info filter client-side AI --}}
+        <div id="filterInfo" style="margin-top:10px; font-size:12px; color:#94a3b8; display:none;">
+            Menampilkan <span id="filterCount" style="font-weight:700; color:#3b5bdb;"></span> dari
+            <span id="filterTotal" style="font-weight:700; color:#475569;"></span> siswa (filter Status AI aktif)
         </div>
     </div>
 
     {{-- Per-Course Detail Table --}}
-    @forelse($topCourses as $course)
+    @forelse($allCourses as $course)
     @php
-        $enrolled = \App\Models\CourseEnrollment::where('course_id', $course->id)
-            ->where('status','approved')->with('user')->get();
+        $enrolledQuery = \App\Models\CourseEnrollment::where('course_id', $course->id)
+            ->where('status','approved')
+            ->with('user');
+
+        if ($filterSiswa !== '') {
+            $enrolledQuery->whereHas('user', fn($q) => $q->where('name', 'like', "%{$filterSiswa}%"));
+        }
+
+        $enrolled = $enrolledQuery->get();
+
+        if ($filterSiswa !== '' && $enrolled->isEmpty()) continue;
     @endphp
-    <div class="course-group" data-course-id="{{ $course->id }}">
+    <div class="course-group" data-course-id="{{ $course->id }}" data-teacher="{{ strtolower($course->teacher->name ?? '') }}">
         <div class="course-header">
             <div>
                 <h3>{{ $course->title }}</h3>
                 <span class="course-meta">Guru: {{ $course->teacher->name ?? '–' }}</span>
+                <span style="font-size:11px; color:#94a3b8; margin-left:8px;">
+                    Dibuat {{ $course->created_at->format('d M Y') }}
+                </span>
             </div>
             <div style="font-size:12px; color:#64748b; font-weight:600;">
-                {{ $enrolled->count() }} siswa aktif
+                <span class="visible-count">{{ $enrolled->count() }}</span> siswa aktif
             </div>
         </div>
 
@@ -250,7 +368,7 @@
                         </td>
                     </tr>
                     @empty
-                    <tr><td colspan="6" style="text-align:center; padding:28px; color:#94a3b8;">
+                    <tr class="empty-row"><td colspan="6" style="text-align:center; padding:28px; color:#94a3b8;">
                         Tidak ada siswa aktif di kursus ini.
                     </td></tr>
                     @endforelse
@@ -261,9 +379,28 @@
     </div>
     @empty
     <div class="rp-card" style="text-align:center; padding:48px; color:#94a3b8;">
-        Belum ada kursus atau data enrollment.
+        @if($filterSiswa || $filterGuru || $filterDateFrom || $filterDateTo)
+            <svg width="36" height="36" fill="none" stroke="#cbd5e1" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 10px; display:block;">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <div style="font-size:14px; font-weight:600; color:#94a3b8; margin-bottom:4px;">Tidak ada hasil ditemukan</div>
+            <div style="font-size:12px; color:#cbd5e1;">Coba ubah filter atau <a href="{{ route('admin.report') }}" style="color:#3b5bdb;">reset</a></div>
+        @else
+            Belum ada kursus atau data enrollment.
+        @endif
     </div>
     @endforelse
+
+    {{-- Pesan saat semua tersaring oleh filter AI (client-side) --}}
+    <div id="noResultMsg" style="display:none;">
+        <div class="rp-card" style="text-align:center; padding:36px; color:#94a3b8;">
+            <svg width="36" height="36" fill="none" stroke="#cbd5e1" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 10px; display:block;">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+            </svg>
+            <div style="font-size:14px; font-weight:600; color:#94a3b8; margin-bottom:4px;">Tidak ada hasil ditemukan</div>
+            <div style="font-size:12px; color:#cbd5e1;">Coba ubah filter Status AI atau <a href="{{ route('admin.report') }}" style="color:#3b5bdb;">reset</a></div>
+        </div>
+    </div>
 
     {{-- Top Teachers & Top Courses summary --}}
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:16px;">
@@ -315,81 +452,118 @@
 {{-- SheetJS dari CDN --}}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-// ── Filter ───────────────────────────────────────
-function filterTable() {
-    const name   = document.getElementById('filterName').value.toLowerCase();
-    const course = document.getElementById('filterCourse').value;
+// ── Filter client-side (hanya untuk Status AI) ────────────────────────────────
+function filterClientSide() {
     const ai     = document.getElementById('filterAi').value;
+    const groups = document.querySelectorAll('.course-group');
     const rows   = document.querySelectorAll('.report-row');
+    const noMsg  = document.getElementById('noResultMsg');
+    const info   = document.getElementById('filterInfo');
+
+    let totalVisible = 0;
+    const totalRows  = rows.length;
 
     rows.forEach(row => {
-        const matchName   = !name   || row.dataset.name.includes(name);
-        const matchCourse = !course || row.dataset.course === course;
-        const matchAi     = !ai     || row.dataset.ai === ai;
-        row.style.display = (matchName && matchCourse && matchAi) ? '' : 'none';
+        const matchAi = !ai || row.dataset.ai === ai;
+        row.style.display = matchAi ? '' : 'none';
+        if (matchAi) totalVisible++;
     });
+
+    let anyGroupVisible = false;
+    groups.forEach(group => {
+        const groupRows      = group.querySelectorAll('.report-row');
+        const visibleInGroup = [...groupRows].filter(r => r.style.display !== 'none').length;
+        group.style.display  = visibleInGroup > 0 ? '' : 'none';
+        if (visibleInGroup > 0) {
+            anyGroupVisible = true;
+            const counter = group.querySelector('.visible-count');
+            if (counter) counter.textContent = visibleInGroup;
+        }
+    });
+
+    noMsg.style.display = (!anyGroupVisible && totalRows > 0) ? '' : 'none';
+
+    if (ai) {
+        info.style.display = '';
+        document.getElementById('filterCount').textContent = totalVisible;
+        document.getElementById('filterTotal').textContent  = totalRows;
+    } else {
+        info.style.display = 'none';
+    }
 }
 
-function resetFilter() {
-    document.getElementById('filterName').value   = '';
-    document.getElementById('filterCourse').value = '';
-    document.getElementById('filterAi').value     = '';
-    filterTable();
+// ── Debounce submit form untuk input teks ─────────────────────────────────────
+let debounceTimer;
+function debounceSubmit() {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+        document.getElementById('filterForm').submit();
+    }, 500);
 }
 
-// ── Export Excel ─────────────────────────────────
+// ── Export Excel ──────────────────────────────────────────────────────────────
 function exportToExcel() {
     const wb = XLSX.utils.book_new();
 
     // Sheet 1: Ringkasan
+    const filterInfo = [
+        @if($filterSiswa)   ['Filter Siswa',  '{{ $filterSiswa }}'], @endif
+        @if($filterGuru)    ['Filter Guru',   '{{ $filterGuru }}'], @endif
+        @if($filterDateFrom)['Tanggal Dari',  '{{ $filterDateFrom }}'], @endif
+        @if($filterDateTo)  ['Tanggal Sampai','{{ $filterDateTo }}'], @endif
+    ];
     const summary = [
         ['REPORT ADMIN LMS', '', '', new Date().toLocaleDateString('id-ID')],
         [],
         ['RINGKASAN PLATFORM'],
-        ['Total User',       {{ $totalUsers }}],
-        ['Siswa',            {{ $totalStudents }}],
-        ['Guru',             {{ $totalTeachers }}],
-        ['Kursus',           {{ $totalCourses }}],
-        ['Enrollment Aktif', {{ $totalEnrollments }}],
-        ['Total Submission', {{ $totalSubmissions }}],
-        ['Quiz Attempts',    {{ $totalQuizAttempts }}],
+        ['Total User',           {{ $totalUsers }}],
+        ['Siswa',                {{ $totalStudents }}],
+        ['Guru',                 {{ $totalTeachers }}],
+        ['Kursus',               {{ $totalCourses }}],
+        ['Enrollment Aktif',     {{ $totalEnrollments }}],
+        ['Total Submission',     {{ $totalSubmissions }}],
+        ['Quiz Attempts',        {{ $totalQuizAttempts }}],
         ['Rata-rata Nilai Quiz', {{ round($avgQuizScore, 1) }}],
         [],
         ['STATUS SUBMISSION'],
         ['Pending',  {{ $submissionStats['pending'] }}],
         ['Dinilai',  {{ $submissionStats['graded'] }}],
         ['Diulas',   {{ $submissionStats['reviewed'] }}],
+        [],
+        ...filterInfo,
     ];
     const wsSummary = XLSX.utils.aoa_to_sheet(summary);
     wsSummary['!cols'] = [{wch:28},{wch:14}];
     XLSX.utils.book_append_sheet(wb, wsSummary, 'Ringkasan');
 
-    // Sheet 2: Data siswa per kursus
-    const header = ['Kursus','Guru','Nama Siswa','Email','Progress (%)','Rata-rata Quiz','Quiz Gagal','Status AI','Rekomendasi AI'];
-    const rows = [];
-    document.querySelectorAll('.report-row').forEach(row => {
-        const tds = row.querySelectorAll('td');
-        const courseName  = row.closest('.course-group')?.querySelector('h3')?.textContent?.trim() ?? '';
-        const teacherName = row.closest('.course-group')?.querySelector('.course-meta')?.textContent?.replace('Guru: ','')?.trim() ?? '';
-        const name        = tds[0]?.querySelector('div')?.textContent?.trim() ?? '';
-        const email       = tds[0]?.querySelectorAll('div')[1]?.textContent?.trim() ?? '';
-        const progress    = tds[1]?.querySelector('.prog-lbl')?.textContent?.trim() ?? '';
-        const quiz        = tds[2]?.querySelector('span')?.textContent?.trim() ?? '–';
-        const failedQ     = tds[3]?.querySelector('span')?.textContent?.trim() ?? '0x';
-        const aiStatus    = tds[4]?.querySelector('span')?.textContent?.trim() ?? '–';
-        const aiRec       = tds[5]?.querySelector('div')?.textContent?.trim() ?? '–';
-        rows.push([courseName, teacherName, name, email, progress, quiz, failedQ, aiStatus, aiRec]);
+    // Sheet 2: Data siswa (hanya yang visible)
+    const header = ['Kursus','Guru','Tgl Kursus Dibuat','Nama Siswa','Email','Progress (%)','Rata-rata Quiz','Quiz Gagal','Status AI','Rekomendasi AI'];
+    const dataRows = [];
+    document.querySelectorAll('.course-group').forEach(group => {
+        if (group.style.display === 'none') return;
+        const headerEl    = group.querySelector('.course-header');
+        const courseName  = headerEl?.querySelector('h3')?.textContent?.trim() ?? '';
+        const teacherName = headerEl?.querySelector('.course-meta')?.textContent?.replace('Guru: ','')?.trim() ?? '';
+        const courseDate  = headerEl?.querySelector('span[style*="94a3b8"]')?.textContent?.trim()?.replace('Dibuat ','') ?? '';
+        group.querySelectorAll('.report-row').forEach(row => {
+            if (row.style.display === 'none') return;
+            const tds      = row.querySelectorAll('td');
+            const name     = tds[0]?.querySelector('div')?.textContent?.trim() ?? '';
+            const email    = tds[0]?.querySelectorAll('div')[1]?.textContent?.trim() ?? '';
+            const progress = tds[1]?.querySelector('.prog-lbl')?.textContent?.trim() ?? '';
+            const quiz     = tds[2]?.querySelector('span')?.textContent?.trim() ?? '–';
+            const failedQ  = tds[3]?.querySelector('span')?.textContent?.trim() ?? '0x';
+            const aiStatus = tds[4]?.querySelector('span')?.textContent?.trim() ?? '–';
+            const aiRec    = tds[5]?.querySelector('div')?.textContent?.trim() ?? '–';
+            dataRows.push([courseName, teacherName, courseDate, name, email, progress, quiz, failedQ, aiStatus, aiRec]);
+        });
     });
 
-    const wsData = XLSX.utils.aoa_to_sheet([header, ...rows]);
+    const wsData = XLSX.utils.aoa_to_sheet([header, ...dataRows]);
     wsData['!cols'] = [
-        {wch:24},{wch:18},{wch:22},{wch:28},
+        {wch:24},{wch:18},{wch:16},{wch:22},{wch:28},
         {wch:14},{wch:16},{wch:12},{wch:14},{wch:50}
     ];
-    // Style header row (bold)
-    ['A1','B1','C1','D1','E1','F1','G1','H1','I1'].forEach(ref => {
-        if (wsData[ref]) wsData[ref].s = { font: { bold: true } };
-    });
     XLSX.utils.book_append_sheet(wb, wsData, 'Data Siswa');
 
     // Sheet 3: Top Courses
@@ -399,7 +573,6 @@ function exportToExcel() {
     wsTc['!cols'] = [{wch:28},{wch:22},{wch:14}];
     XLSX.utils.book_append_sheet(wb, wsTc, 'Top Kursus');
 
-    // Download
     const date = new Date().toISOString().slice(0,10);
     XLSX.writeFile(wb, `report-admin-${date}.xlsx`);
 }

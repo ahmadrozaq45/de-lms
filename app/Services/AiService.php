@@ -9,39 +9,37 @@ use Illuminate\Support\Facades\Log;
 class AiService
 {
     private string $apiKey;
-    private string $provider; // 'anthropic' | 'gemini' | 'groq'
+    private string $provider;
     private string $model;
 
-    // Endpoint per provider
     private const ENDPOINTS = [
         'anthropic' => 'https://api.anthropic.com/v1/messages',
         'gemini'    => 'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent',
         'groq'      => 'https://api.groq.com/openai/v1/chat/completions',
+        'openai'    => 'https://api.openai.com/v1/chat/completions',
     ];
 
-    // Default model per provider
     private const DEFAULT_MODELS = [
         'anthropic' => 'claude-sonnet-4-6',
         'gemini'    => 'gemini-1.5-flash',
         'groq'      => 'llama-3.1-8b-instant',
+        'openai'    => 'gpt-4o-mini',
     ];
 
     public function __construct()
     {
-        // Baca dari DB setting, fallback ke .env
         $this->provider = \App\Models\Setting::get('ai_provider', 'anthropic');
-        $this->apiKey   = \App\Models\Setting::get('ai_api_key', '')
-            ?: config('services.anthropic.key', '');
-        $this->model    = \App\Models\Setting::get('ai_model', '')
+
+        // Baca API key dan model per provider
+        $this->apiKey = \App\Models\Setting::get("ai_api_key_{$this->provider}", '')
+            ?: config("services.{$this->provider}.key", '');
+
+        $this->model = \App\Models\Setting::get("ai_model_{$this->provider}", '')
             ?: self::DEFAULT_MODELS[$this->provider] ?? 'gemini-1.5-flash';
     }
 
     // ── Public Methods ────────────────────────────────────────────────────────
 
-    /**
-     * Generate AI recommendation (analisis performa siswa di suatu kursus).
-     * Simpan ke ai_analyses.
-     */
     public function generateStudentRecommendation(User $student, Course $course): AiAnalysis
     {
         $allMaterialIds = Material::whereHas('module', fn($q) => $q->where('course_id', $course->id))
@@ -107,9 +105,6 @@ PROMPT;
         );
     }
 
-    /**
-     * Proses satu giliran conversation quiz.
-     */
     public function conversationTurn(Quiz $quiz, array $history, string $userMessage): string
     {
         $systemPrompt = $quiz->ai_system_prompt
@@ -126,9 +121,6 @@ PROMPT;
         return $this->callAiChat($systemPrompt, $messages);
     }
 
-    /**
-     * Evaluasi percakapan conversation quiz, beri skor 0-100.
-     */
     public function evaluateConversation(Quiz $quiz, array $conversationHistory): array
     {
         $topic = $quiz->conversation_topic ?? $quiz->title;
@@ -180,9 +172,6 @@ PROMPT;
 
     // ── Private: Dispatcher ───────────────────────────────────────────────────
 
-    /**
-     * Kirim prompt sederhana, return [status_prediction, recommendation].
-     */
     private function callApi(string $prompt): array
     {
         try {
@@ -199,26 +188,22 @@ PROMPT;
         }
     }
 
-    /**
-     * Kirim prompt ke provider yang aktif, return teks mentah.
-     */
     private function callAiRaw(string $prompt): string
     {
         return match ($this->provider) {
             'gemini' => $this->callGemini($prompt),
             'groq'   => $this->callGroq([['role' => 'user', 'content' => $prompt]]),
+            'openai' => $this->callOpenAi([['role' => 'user', 'content' => $prompt]]),
             default  => $this->callAnthropic([['role' => 'user', 'content' => $prompt]]),
         };
     }
 
-    /**
-     * Kirim multi-turn chat ke provider yang aktif, return teks balasan.
-     */
     private function callAiChat(string $system, array $messages): string
     {
         return match ($this->provider) {
             'gemini' => $this->callGeminiChat($system, $messages),
             'groq'   => $this->callGroq($messages, $system),
+            'openai' => $this->callOpenAi($messages, $system),
             default  => $this->callAnthropicChat($system, $messages),
         };
     }
@@ -293,7 +278,6 @@ PROMPT;
         $url = str_replace('{model}', $this->model, self::ENDPOINTS['gemini'])
              . '?key=' . $this->apiKey;
 
-        // Gemini tidak punya system role terpisah — inject sebagai pesan pertama
         $contents = [
             ['role' => 'user',  'parts' => [['text' => $system]]],
             ['role' => 'model', 'parts' => [['text' => 'Baik, saya siap.']]],
@@ -335,6 +319,30 @@ PROMPT;
 
         if ($response->failed()) {
             Log::error('Groq API error', ['body' => $response->body()]);
+            return 'Maaf, terjadi kesalahan. Silakan coba lagi.';
+        }
+
+        return $response->json('choices.0.message.content', '{}');
+    }
+
+    // ── Private: OpenAI ───────────────────────────────────────────────────────
+
+    private function callOpenAi(array $messages, string $system = ''): string
+    {
+        $payload = ['model' => $this->model, 'max_tokens' => 512, 'temperature' => 0.3];
+
+        if ($system) {
+            array_unshift($messages, ['role' => 'system', 'content' => $system]);
+        }
+        $payload['messages'] = $messages;
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->apiKey,
+            'Content-Type'  => 'application/json',
+        ])->post(self::ENDPOINTS['openai'], $payload);
+
+        if ($response->failed()) {
+            Log::error('OpenAI API error', ['body' => $response->body()]);
             return 'Maaf, terjadi kesalahan. Silakan coba lagi.';
         }
 

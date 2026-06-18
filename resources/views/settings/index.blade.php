@@ -39,6 +39,23 @@
 .api-key-wrap .fi { padding-right:48px; font-family:monospace; }
 .toggle-vis   { position:absolute; right:12px; top:50%; transform:translateY(-50%);
                 background:none; border:none; cursor:pointer; color:#94a3b8; padding:0; }
+
+/* Provider card */
+.provider-card {
+    border:1.5px solid #e2e8f0; border-radius:12px; padding:16px 18px;
+    margin-bottom:12px; transition:border-color .15s;
+}
+.provider-card.active-provider { border-color:#3b5bdb; background:#f8faff; }
+.provider-label {
+    display:flex; align-items:center; gap:10px; margin-bottom:12px;
+    font-size:13px; font-weight:700; color:#1e293b;
+}
+.provider-badge {
+    font-size:10px; font-weight:700; padding:2px 8px; border-radius:99px;
+}
+.badge-free { background:#dcfce7; color:#16a34a; }
+.badge-paid { background:#fef3c7; color:#92400e; }
+.provider-hint { font-size:11px; color:#94a3b8; margin-top:5px; }
 </style>
 
 <div class="st-wrap">
@@ -168,50 +185,177 @@
         <div id="tab-api" class="tab-content {{ $activeTab==='api' ? 'active' : '' }}"
              style="padding:24px;">
             <p class="sec-title">Pengaturan AI</p>
-            <p class="sec-desc">Konfigurasi provider dan API key untuk fitur rekomendasi AI.</p>
+            <p class="sec-desc">Pilih provider aktif dan simpan API key masing-masing provider secara terpisah.</p>
+
             <form method="POST" action="{{ route('settings.api') }}">
                 @csrf @method('PATCH')
-                <div style="margin-bottom:16px;">
-                    <label class="fl">Provider AI</label>
-                    <select name="ai_provider" class="fi">
+
+                {{-- Provider aktif --}}
+                <div style="margin-bottom:20px;">
+                    <label class="fl">Provider Aktif</label>
+                    <select name="ai_provider" id="providerSelect" class="fi" onchange="highlightActiveProvider()">
                         <option value="anthropic" {{ ($appSettings['ai_provider']??'') === 'anthropic' ? 'selected' : '' }}>Anthropic (Claude) — Berbayar</option>
                         <option value="gemini"    {{ ($appSettings['ai_provider']??'') === 'gemini'    ? 'selected' : '' }}>Google Gemini — Gratis</option>
                         <option value="groq"      {{ ($appSettings['ai_provider']??'') === 'groq'      ? 'selected' : '' }}>Groq (Llama) — Gratis</option>
                         <option value="openai"    {{ ($appSettings['ai_provider']??'') === 'openai'    ? 'selected' : '' }}>OpenAI (GPT) — Berbayar</option>
                     </select>
+                    <p class="provider-hint" style="margin-top:6px;">Provider yang dipilih akan digunakan untuk semua fitur AI di platform.</p>
                 </div>
-                <div style="margin-bottom:16px;">
-                    <label class="fl">API Key</label>
-                    <div class="api-key-wrap">
-                        <input type="text" name="ai_api_key" id="apiKeyInput"
-                               value="{{ $appSettings['ai_api_key'] ?? '' }}"
-                               class="fi" placeholder="sk-ant-... atau AIzaSy..."
-                               autocomplete="off"
-                               style="font-family:monospace; -webkit-text-security:disc;"
-                               onfocus="this.style.webkitTextSecurity='none'"
-                               onblur="this.style.webkitTextSecurity='disc'">
-                        <button type="button" class="toggle-vis" onclick="toggleApiKey()" title="Tampilkan/sembunyikan">
-                            <svg id="eyeIcon" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                <circle cx="12" cy="12" r="3"/>
-                            </svg>
-                        </button>
+
+                <div style="border-top:1px solid #f1f5f9; padding-top:20px; margin-bottom:4px;">
+                    <p class="sec-title" style="margin-bottom:4px;">API Key & Model Per Provider</p>
+                    <p class="sec-desc" style="margin-bottom:16px;">Setiap provider menyimpan key-nya sendiri. Isi semua yang Anda miliki — tidak akan saling menimpa.</p>
+                </div>
+
+                {{-- Anthropic --}}
+                @php $isActive = ($appSettings['ai_provider']??'anthropic') === 'anthropic'; @endphp
+                <div class="provider-card {{ $isActive ? 'active-provider' : '' }}" id="card-anthropic">
+                    <div class="provider-label">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#d97706"><circle cx="12" cy="12" r="10"/></svg>
+                        Anthropic (Claude)
+                        <span class="provider-badge badge-paid">Berbayar</span>
+                        @if($isActive)<span class="provider-badge" style="background:#dbeafe;color:#1d4ed8;">Aktif</span>@endif
                     </div>
-                    @error('ai_api_key')<p style="color:#dc2626;font-size:12px;margin-top:4px;">{{ $message }}</p>@enderror
-                    <p style="font-size:12px;color:#94a3b8;margin-top:4px;">
-                        API key disimpan terenkripsi di database, tidak hardcode di kode.
-                    </p>
+                    <div class="row2">
+                        <div>
+                            <label class="fl">API Key</label>
+                            <div class="api-key-wrap">
+                                <input type="text" name="ai_api_key_anthropic"
+                                       value="{{ $appSettings['ai_api_key_anthropic'] ?? '' }}"
+                                       class="fi" placeholder="sk-ant-api03-..."
+                                       autocomplete="off"
+                                       style="-webkit-text-security:disc;"
+                                       onfocus="this.style.webkitTextSecurity='none'"
+                                       onblur="this.style.webkitTextSecurity='disc'">
+                                <button type="button" class="toggle-vis" onclick="toggleKey(this)">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="fl">Model</label>
+                            <input type="text" name="ai_model_anthropic"
+                                   value="{{ $appSettings['ai_model_anthropic'] ?? 'claude-sonnet-4-6' }}"
+                                   class="fi" placeholder="claude-sonnet-4-6">
+                            <p class="provider-hint">Contoh: <code>claude-sonnet-4-6</code>, <code>claude-opus-4-6</code></p>
+                        </div>
+                    </div>
                 </div>
-                <div style="margin-bottom:20px;">
-                    <label class="fl">Model AI</label>
-                    <input type="text" name="ai_model"
-                           value="{{ $appSettings['ai_model'] ?? 'claude-sonnet-4-6' }}"
-                           class="fi" placeholder="claude-sonnet-4-6">
-                    <p style="font-size:12px;color:#94a3b8;margin-top:4px;">
-                        Contoh: <code>claude-sonnet-4-6</code>, <code>gpt-4o</code>
-                    </p>
+
+                {{-- Gemini --}}
+                @php $isActive = ($appSettings['ai_provider']??'anthropic') === 'gemini'; @endphp
+                <div class="provider-card {{ $isActive ? 'active-provider' : '' }}" id="card-gemini">
+                    <div class="provider-label">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#4285f4"><circle cx="12" cy="12" r="10"/></svg>
+                        Google Gemini
+                        <span class="provider-badge badge-free">Gratis</span>
+                        @if($isActive)<span class="provider-badge" style="background:#dbeafe;color:#1d4ed8;">Aktif</span>@endif
+                    </div>
+                    <div class="row2">
+                        <div>
+                            <label class="fl">API Key</label>
+                            <div class="api-key-wrap">
+                                <input type="text" name="ai_api_key_gemini"
+                                       value="{{ $appSettings['ai_api_key_gemini'] ?? '' }}"
+                                       class="fi" placeholder="AIzaSy..."
+                                       autocomplete="off"
+                                       style="-webkit-text-security:disc;"
+                                       onfocus="this.style.webkitTextSecurity='none'"
+                                       onblur="this.style.webkitTextSecurity='disc'">
+                                <button type="button" class="toggle-vis" onclick="toggleKey(this)">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="fl">Model</label>
+                            <input type="text" name="ai_model_gemini"
+                                   value="{{ $appSettings['ai_model_gemini'] ?? 'gemini-1.5-flash' }}"
+                                   class="fi" placeholder="gemini-1.5-flash">
+                            <p class="provider-hint">Contoh: <code>gemini-1.5-flash</code>, <code>gemini-1.5-pro</code></p>
+                        </div>
+                    </div>
                 </div>
-                <button type="submit" class="btn-save">Simpan API Setting</button>
+
+                {{-- Groq --}}
+                @php $isActive = ($appSettings['ai_provider']??'anthropic') === 'groq'; @endphp
+                <div class="provider-card {{ $isActive ? 'active-provider' : '' }}" id="card-groq">
+                    <div class="provider-label">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#f97316"><circle cx="12" cy="12" r="10"/></svg>
+                        Groq (Llama)
+                        <span class="provider-badge badge-free">Gratis</span>
+                        @if($isActive)<span class="provider-badge" style="background:#dbeafe;color:#1d4ed8;">Aktif</span>@endif
+                    </div>
+                    <div class="row2">
+                        <div>
+                            <label class="fl">API Key</label>
+                            <div class="api-key-wrap">
+                                <input type="text" name="ai_api_key_groq"
+                                       value="{{ $appSettings['ai_api_key_groq'] ?? '' }}"
+                                       class="fi" placeholder="gsk_..."
+                                       autocomplete="off"
+                                       style="-webkit-text-security:disc;"
+                                       onfocus="this.style.webkitTextSecurity='none'"
+                                       onblur="this.style.webkitTextSecurity='disc'">
+                                <button type="button" class="toggle-vis" onclick="toggleKey(this)">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="fl">Model</label>
+                            <input type="text" name="ai_model_groq"
+                                   value="{{ $appSettings['ai_model_groq'] ?? 'llama-3.1-8b-instant' }}"
+                                   class="fi" placeholder="llama-3.1-8b-instant">
+                            <p class="provider-hint">Contoh: <code>llama-3.1-8b-instant</code>, <code>mixtral-8x7b-32768</code></p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- OpenAI --}}
+                @php $isActive = ($appSettings['ai_provider']??'anthropic') === 'openai'; @endphp
+                <div class="provider-card {{ $isActive ? 'active-provider' : '' }}" id="card-openai">
+                    <div class="provider-label">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="#10a37f"><circle cx="12" cy="12" r="10"/></svg>
+                        OpenAI (GPT)
+                        <span class="provider-badge badge-paid">Berbayar</span>
+                        @if($isActive)<span class="provider-badge" style="background:#dbeafe;color:#1d4ed8;">Aktif</span>@endif
+                    </div>
+                    <div class="row2">
+                        <div>
+                            <label class="fl">API Key</label>
+                            <div class="api-key-wrap">
+                                <input type="text" name="ai_api_key_openai"
+                                       value="{{ $appSettings['ai_api_key_openai'] ?? '' }}"
+                                       class="fi" placeholder="sk-..."
+                                       autocomplete="off"
+                                       style="-webkit-text-security:disc;"
+                                       onfocus="this.style.webkitTextSecurity='none'"
+                                       onblur="this.style.webkitTextSecurity='disc'">
+                                <button type="button" class="toggle-vis" onclick="toggleKey(this)">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div>
+                            <label class="fl">Model</label>
+                            <input type="text" name="ai_model_openai"
+                                   value="{{ $appSettings['ai_model_openai'] ?? 'gpt-4o-mini' }}"
+                                   class="fi" placeholder="gpt-4o-mini">
+                            <p class="provider-hint">Contoh: <code>gpt-4o-mini</code>, <code>gpt-4o</code></p>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn-save" style="margin-top:8px;">Simpan API Setting</button>
             </form>
         </div>
 
@@ -318,7 +462,6 @@
                         <textarea name="cert_footer_text" rows="2" class="fi"
                                   style="resize:vertical;" placeholder="Teks di bagian bawah sertifikat...">{{ old('cert_footer_text', $appSettings['cert_footer_text'] ?? '') }}</textarea>
                     </div>
-                    {{-- Preview sertifikat sederhana --}}
                     <div style="border:2px solid #c7d2fe; border-radius:12px; padding:24px; text-align:center;
                                 background:linear-gradient(135deg,#eff6ff,#f5f3ff); margin-bottom:20px;">
                         <div style="font-size:11px; font-weight:700; color:#6366f1; letter-spacing:2px;
@@ -352,10 +495,19 @@ function switchTab(e, name) {
     document.getElementById('tab-' + name).classList.add('active');
 }
 
-function toggleApiKey() {
-    const input = document.getElementById('apiKeyInput');
-    const isHidden = input.style.webkitTextSecurity === 'disc';
-    input.style.webkitTextSecurity = isHidden ? 'none' : 'disc';
+function toggleKey(btn) {
+    const input = btn.previousElementSibling;
+    const hidden = input.style.webkitTextSecurity === 'disc';
+    input.style.webkitTextSecurity = hidden ? 'none' : 'disc';
+}
+
+function highlightActiveProvider() {
+    const val = document.getElementById('providerSelect').value;
+    ['anthropic','gemini','groq','openai'].forEach(p => {
+        const card = document.getElementById('card-' + p);
+        if (!card) return;
+        card.classList.toggle('active-provider', p === val);
+    });
 }
 
 // Live preview sertifikat
