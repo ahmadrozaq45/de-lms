@@ -4,15 +4,17 @@ namespace App\Services;
 
 class BadgeService
 {
-    /**
-     * Ini adalah class sementara untuk mengatasi error 
-     * karena file aslinya belum di-push oleh tim.
-     */
-    
     public function __construct()
     {
         //
     }
 
-    // Tambahkan method kosong jika nanti ada error method tidak ditemukan
+    /**
+     * Dummy method untuk mencegah eror saat submit tugas.
+     * Menggunakan method biasa (bukan static) dan menerima parameter user.
+     */
+    public function checkAfterSubmission($user = null)
+    {
+        return true; 
+    }
 }

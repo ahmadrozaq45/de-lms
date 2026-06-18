@@ -33,26 +33,28 @@ class AssignmentController extends Controller
      * Guru membuat assignment baru.
      * POST /api/assignments
      */
-    public function store(Request $request, $moduleId = null) // 🚀 2. TAMBAH PARAMETER $moduleId & HAPUS ': JsonResponse'
+    public function store(Request $request, $moduleId = null)
     {
         if ($moduleId) {
             $request->validate([
-                'title'       => 'required|string|max:255',
-                'description' => 'nullable|string',
-                'due_date'    => 'required|date',
-                'max_score'   => 'required|integer|min:1|max:100',
+                'title'           => 'required|string|max:255',
+                'description'     => 'nullable|string',
+                'due_date'        => 'required|date',
+                'max_score'       => 'required|integer|min:1|max:100',
+                'submission_type' => 'required|in:text,file',
             ]);
 
             // Ambil data modul untuk mendapatkan course_id secara otomatis
             $module = Module::findOrFail($moduleId);
 
             Assignment::create([
-                'module_id'    => $moduleId,
-                'course_id'    => $module->course_id,
-                'title'        => $request->title,
-                'instructions' => $request->description, // Memetakan 'description' form ke 'instructions' DB
-                'due_date'     => $request->due_date,
-                'max_score'    => $request->max_score,
+                'module_id'       => $moduleId,
+                'course_id'       => $module->course_id,
+                'title'           => $request->title,
+                'instructions'    => $request->description, // Memetakan 'description' form ke 'instructions' DB
+                'due_date'        => $request->due_date,
+                'max_score'       => $request->max_score,
+                'submission_type' => $request->submission_type, // 👈 Tambahan simpan ke database
             ]);
 
             return redirect()->back()->with('success', 'Tugas baru berhasil ditambahkan!');
@@ -72,18 +74,26 @@ class AssignmentController extends Controller
      * Siswa mengumpulkan jawaban assignment.
      * POST /api/assignments/{assignmentId}/submit
      */
-    public function submit(Request $request, int $assignmentId): JsonResponse
+    public function submit(Request $request, int $assignmentId) // 👈 Hapus ': JsonResponse' di sini
     {
-        $request->validate([
-            // Validasi: Jika answer kosong, maka file harus ada, dan sebaliknya[cite: 3]
-            'file_path' => 'required_without:answer|nullable|file|max:10000',
-            'answer'    => 'required_without:file_path|nullable|string', 
-        ]);
-
+        // 1. Ambil assignment DULU untuk mengecek tipenya
         $assignment = Assignment::findOrFail($assignmentId);
+
+        // 2. Siapkan aturan dasar
+        $rules = [];
+
+        // 3. Validasi dinamis sesuai tipe tugas
+        if ($assignment->submission_type == 'text') {
+            $rules['answer'] = 'required|string';
+        } elseif ($assignment->submission_type == 'file') {
+            $rules['file_path'] = 'required|file|max:10000';
+        }
+        // Jalankan validasi
+        $request->validate($rules);
+
         $filePath = null;
 
-        // Proses unggah file fisik jika ada[cite: 1]
+        // Proses unggah file fisik jika ada
         if ($request->hasFile('file_path')) {
             $filePath = $request->file('file_path')->store('submissions', 'public');
         }   

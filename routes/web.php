@@ -13,6 +13,7 @@ use App\Http\Controllers\QuizController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\SettingController;
+use App\Http\Controllers\SubmissionController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RecommendationController;
 
@@ -55,6 +56,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
         Route::get('/dashboard', [DashboardController::class, 'teacher'])->name('dashboard');
         Route::get('/report',    [ReportController::class, 'teacher'])->name('report');
+
+        Route::get('/submissions/{id}', [SubmissionController::class, 'show'])->name('submissions.show');
 
         Route::resource('courses', CourseController::class)
              ->only(['index', 'create', 'store', 'show', 'edit', 'update', 'destroy']);

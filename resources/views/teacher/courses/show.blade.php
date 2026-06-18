@@ -24,6 +24,17 @@
             </div>
         @endif
 
+        @if($errors->any())
+            <div style="margin-bottom:24px; padding:16px; background:#fee2e2; border:1px solid #f87171; color:#b91c1c; border-radius:12px;">
+                <strong style="display:block; margin-bottom:8px;">Gagal menyimpan data! Silakan periksa hal berikut:</strong>
+                <ul style="margin:0; padding-left:20px; font-size:14px;">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
         {{-- Course Header --}}
         <div style="background:white; border-radius:16px; overflow:hidden; border:1px solid #e2e8f0; margin-bottom:24px; box-shadow:0 10px 15px -3px rgba(0,0,0,0.05);">
             <div style="height:200px; position:relative;">
@@ -339,10 +350,12 @@
                                                 <label class="block text-sm font-bold text-gray-700 mb-2">Judul Tugas</label>
                                                 <input type="text" name="title" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3" placeholder="Contoh: Tugas 1: Analisis Sistem" required>
                                             </div>
+                                            
                                             <div>
                                                 <label class="block text-sm font-bold text-gray-700 mb-2">Instruksi <span class="text-red-500">*</span></label>
                                                 <textarea name="description" rows="4" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" placeholder="Tuliskan petunjuk pengerjaan..." required></textarea>
                                             </div>
+                                            
                                             <div class="grid grid-cols-2 gap-4">
                                                 <div>
                                                     <label class="block text-sm font-bold text-gray-700 mb-2">Tenggat Waktu</label>
@@ -352,6 +365,14 @@
                                                     <label class="block text-sm font-bold text-gray-700 mb-2">Nilai Maksimal</label>
                                                     <input type="number" name="max_score" min="1" max="100" value="100" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3" required>
                                                 </div>
+                                            </div>
+
+                                            <div>
+                                                <label class="block text-sm font-bold text-gray-700 mb-2">Tipe Pengumpulan</label>
+                                                <select name="submission_type" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3" required>
+                                                    <option value="file">📁 Upload File Saja</option>
+                                                    <option value="text">📝 Teks Langsung Saja</option>
+                                                </select>
                                             </div>
                                         </div>
                                         <div class="px-8 py-5 bg-gray-50 flex flex-row-reverse gap-3">

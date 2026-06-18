@@ -145,26 +145,30 @@
             <form action="{{ route('student.assignments.submit', $assignment->id) }}" method="POST" enctype="multipart/form-data">
                 @csrf
 
-                {{-- Text Answer --}}
-                <div style="margin-bottom:20px;">
-                    <label style="display:block; font-size:14px; font-weight:700; color:#374151; margin-bottom:8px;">Jawaban Text</label>
-                    <textarea name="answer" rows="8" style="width:100%; border:1px solid #e2e8f0; border-radius:12px; padding:16px; font-size:15px; color:#1e293b; resize:vertical; outline:none; transition:border-color 0.2s; box-sizing:border-box;" placeholder="Tulis jawaban Anda di sini..." onfocus="this.style.borderColor='#3b5bdb'" onblur="this.style.borderColor='#e2e8f0'">{{ old('answer') }}</textarea>
-                </div>
-
-                {{-- File Submission --}}
-                <div style="margin-bottom:20px;">
-                    <label style="display:block; font-size:14px; font-weight:700; color:#374151; margin-bottom:8px;">Lampiran File <span style="font-weight:400; color:#94a3b8;">(opsional)</span></label>
-                    <div style="border:2px dashed #e2e8f0; border-radius:12px; padding:28px; text-align:center; background:#f8fafc; transition:border-color 0.2s;" 
-                         ondragover="this.style.borderColor='#3b5bdb'" ondragleave="this.style.borderColor='#e2e8f0'">
-                        <svg width="36" height="36" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 10px; display:block;">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="17 8 12 3 7 8"/>
-                            <line x1="12" y1="3" x2="12" y2="15"/>
-                        </svg>
-                        <p style="color:#64748b; font-size:14px; margin:0 0 12px 0;">Upload file pendukung (PDF, DOC, ZIP, gambar, video, dll)</p>
-                        <input type="file" name="file_path" style="font-size:14px; color:#64748b;">
+                {{-- Hanya muncul jika guru memilih TEXT --}}
+                @if($assignment->submission_type == 'text')
+                    <div style="margin-bottom:20px;">
+                        <label style="display:block; font-size:14px; font-weight:700; color:#374151; margin-bottom:8px;">Jawaban Text <span style="color:#ef4444;">*</span></label>
+                        <textarea name="answer" rows="8" style="width:100%; border:1px solid #e2e8f0; border-radius:12px; padding:16px; font-size:15px; color:#1e293b; resize:vertical; outline:none; transition:border-color 0.2s; box-sizing:border-box;" placeholder="Tulis jawaban Anda di sini..." onfocus="this.style.borderColor='#3b5bdb'" onblur="this.style.borderColor='#e2e8f0'">{{ old('answer') }}</textarea>
                     </div>
-                </div>
+                @endif
+
+                {{-- Hanya muncul jika guru memilih FILE --}}
+                @if($assignment->submission_type == 'file')
+                    <div style="margin-bottom:20px;">
+                        <label style="display:block; font-size:14px; font-weight:700; color:#374151; margin-bottom:8px;">Lampiran File <span style="color:#ef4444;">*</span></label>
+                        <div style="border:2px dashed #e2e8f0; border-radius:12px; padding:28px; text-align:center; background:#f8fafc; transition:border-color 0.2s;" 
+                             ondragover="this.style.borderColor='#3b5bdb'" ondragleave="this.style.borderColor='#e2e8f0'">
+                            <svg width="36" height="36" fill="none" stroke="#94a3b8" stroke-width="1.5" viewBox="0 0 24 24" style="margin:0 auto 10px; display:block;">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                                <line x1="12" y1="3" x2="12" y2="15"/>
+                            </svg>
+                            <p style="color:#64748b; font-size:14px; margin:0 0 12px 0;">Upload file pendukung (PDF, DOC, ZIP, gambar, video, dll)</p>
+                            <input type="file" name="file_path" style="font-size:14px; color:#64748b;">
+                        </div>
+                    </div>
+                @endif
 
                 {{-- AI Info Box --}}
                 <div style="margin-top:20px; background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:20px;">
