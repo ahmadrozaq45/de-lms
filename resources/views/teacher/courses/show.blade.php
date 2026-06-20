@@ -89,9 +89,7 @@
 
             <div style="display:flex; border-bottom:1px solid #e2e8f0; background:#f8fafc; padding:0 16px;">
                 <button class="tab-btn active" onclick="switchTab(event,'materi')">Materi</button>
-                <!-- <button class="tab-btn" onclick="switchTab(event,'diskusi')">Diskusi</button> -->
-                <button class="tab-btn" onclick="switchTab(event,'tugas')">Tugas</button>
-                <button class="tab-btn" onclick="switchTab(event,'quiz')">Quiz</button>
+                <button class="tab-btn" onclick="switchTab(event,'evaluasi')">Tugas & Quiz</button>
             </div>
 
             {{-- TAB MATERI --}}
@@ -289,162 +287,170 @@
                 @endforelse
             </div>
 
-            {{-- TAB TUGAS --}}
-            <div id="tab-tugas" class="tab-content" style="padding:32px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
-                    <h2 style="font-size:18px; font-weight:700; color:#1e293b; margin:0;">Kelola Tugas per Modul</h2>
-                    <span style="font-size:13px; color:#64748b;">Total: <strong>{{ $course->modules->sum(fn($m) => $m->assignments->count()) }}</strong> tugas</span>
-                </div>
+            {{-- TAB EVALUASI (GABUNGAN TUGAS & QUIZ) --}}
+            <div id="tab-evaluasi" class="tab-content" style="padding:32px;">
+                
+                {{-- BAGIAN 1: TUGAS --}}
+                <div style="margin-bottom:48px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                        <h2 style="font-size:18px; font-weight:700; color:#1e293b; margin:0;">Kelola Tugas per Modul</h2>
+                        <span style="font-size:13px; color:#64748b;">Total: <strong>{{ $course->modules->sum(fn($m) => $m->assignments->count()) }}</strong> tugas</span>
+                    </div>
 
-                @forelse ($course->modules as $module)
-                    <div style="margin-bottom:24px; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden;">
-                        <div style="background:#f8fafc; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #e2e8f0;">
-                            <h3 style="font-size:15px; font-weight:700; color:#1e293b; margin:0; display:flex; align-items:center; gap:8px;">
-                                <span style="width:8px; height:8px; background:#6d28d9; border-radius:50%; flex-shrink:0;"></span>
-                                Modul: {{ $module->title }}
-                            </h3>
-                            <button onclick="toggleModal('modal-assignment-{{ $module->id }}')"
-                                    style="background:#ede9fe; color:#6d28d9; font-size:12px; font-weight:700; padding:5px 12px; border-radius:7px; border:none; cursor:pointer;">
-                                + Tugas
-                            </button>
-                        </div>
+                    @forelse ($course->modules as $module)
+                        <div style="margin-bottom:24px; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden;">
+                            <div style="background:#f8fafc; padding:12px 18px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #e2e8f0;">
+                                <h3 style="font-size:15px; font-weight:700; color:#1e293b; margin:0; display:flex; align-items:center; gap:8px;">
+                                    <span style="width:8px; height:8px; background:#6d28d9; border-radius:50%; flex-shrink:0;"></span>
+                                    Modul: {{ $module->title }}
+                                </h3>
+                                <button onclick="toggleModal('modal-assignment-{{ $module->id }}')"
+                                        style="background:#ede9fe; color:#6d28d9; font-size:12px; font-weight:700; padding:5px 12px; border-radius:7px; border:none; cursor:pointer;">
+                                    + Tugas
+                                </button>
+                            </div>
 
-                        <div style="padding:14px 18px; display:flex; flex-direction:column; gap:8px;">
-                            @forelse($module->assignments as $assignment)
-                                <div class="materi-item" style="display:flex; align-items:center; gap:14px; padding:12px 14px; border:1px solid #e0e7ff; border-radius:10px; background:#fafafe; border-left:3px solid #6366f1;">
-                                    <div style="width:36px; height:36px; background:#f5f3ff; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                    </div>
-                                    <div style="flex:1;">
-                                        <div style="font-size:14px; font-weight:700; color:#1e1b4b; margin-bottom:3px;">
-                                            {{ $assignment->title }}
+                            <div style="padding:14px 18px; display:flex; flex-direction:column; gap:8px;">
+                                @forelse($module->assignments as $assignment)
+                                    <div class="materi-item" style="display:flex; align-items:center; gap:14px; padding:12px 14px; border:1px solid #e0e7ff; border-radius:10px; background:#fafafe; border-left:3px solid #6366f1;">
+                                        <div style="width:36px; height:36px; background:#f5f3ff; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                         </div>
-                                        <div style="font-size:12px; color:#64748b;">
-                                            Tenggat: <span style="color:#ef4444; font-weight:600;">{{ \Carbon\Carbon::parse($assignment->due_date)->format('d M Y, H:i') }}</span>
+                                        <div style="flex:1;">
+                                            <div style="font-size:14px; font-weight:700; color:#1e1b4b; margin-bottom:3px;">
+                                                {{ $assignment->title }}
+                                            </div>
+                                            <div style="font-size:12px; color:#64748b;">
+                                                Tenggat: <span style="color:#ef4444; font-weight:600;">{{ \Carbon\Carbon::parse($assignment->due_date)->format('d M Y, H:i') }}</span>
+                                            </div>
+                                        </div>
+                                        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px; margin-left:20px; flex-shrink:0;">
+                                            <span style="font-size:12px; color:#94a3b8;">Skor Maks: <strong style="color:#475569;">{{ $assignment->max_score ?? 100 }}</strong></span>
                                         </div>
                                     </div>
-                                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:8px; margin-left:20px; flex-shrink:0;">
-                                        <span style="font-size:12px; color:#94a3b8;">Skor Maks: <strong style="color:#475569;">{{ $assignment->max_score ?? 100 }}</strong></span>
+                                @empty
+                                    <p style="color:#94a3b8; font-size:13px; font-style:italic; padding:4px 2px;">Belum ada tugas di modul ini.</p>
+                                @endforelse
+                            </div>
+
+                            {{-- MODAL TAMBAH TUGAS --}}
+                            <div id="modal-assignment-{{ $module->id }}" class="fixed inset-0 z-50 hidden overflow-y-auto">
+                                <div class="flex items-center justify-center min-h-screen p-4">
+                                    <div class="fixed inset-0 bg-gray-900 bg-opacity-60" onclick="toggleModal('modal-assignment-{{ $module->id }}')"></div>
+                                    <div class="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden text-left">
+                                        <form action="{{ route('teacher.modules.assignments.store', $module->id) }}" method="POST">
+                                            @csrf
+                                            <div class="px-8 py-5 border-b border-gray-100 flex justify-between items-center">
+                                                <h3 class="text-xl font-bold">Tambah Tugas ke: {{ $module->title }}</h3>
+                                                <button type="button" onclick="toggleModal('modal-assignment-{{ $module->id }}')" class="text-gray-400 hover:text-gray-600">
+                                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                </button>
+                                            </div>
+                                            <div class="p-8 space-y-5">
+                                                <div>
+                                                    <label class="block text-sm font-bold text-gray-700 mb-2">Judul Tugas</label>
+                                                    <input type="text" name="title" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3" placeholder="Contoh: Tugas 1: Analisis Sistem" required>
+                                                </div>
+                                                
+                                                <div>
+                                                    <label class="block text-sm font-bold text-gray-700 mb-2">Instruksi <span class="text-red-500">*</span></label>
+                                                    <textarea name="description" rows="4" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" placeholder="Tuliskan petunjuk pengerjaan..." required></textarea>
+                                                </div>
+                                                
+                                                <div class="grid grid-cols-2 gap-4">
+                                                    <div>
+                                                        <label class="block text-sm font-bold text-gray-700 mb-2">Tenggat Waktu</label>
+                                                        <input type="datetime-local" name="due_date" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3" required>
+                                                    </div>
+                                                    <div>
+                                                        <label class="block text-sm font-bold text-gray-700 mb-2">Nilai Maksimal</label>
+                                                        <input type="number" name="max_score" min="1" max="100" value="100" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3" required>
+                                                    </div>
+                                                </div>
+
+                                                <div>
+                                                    <label class="block text-sm font-bold text-gray-700 mb-2">Tipe Pengumpulan</label>
+                                                    <select name="submission_type" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3" required>
+                                                        <option value="file">📁 Upload File Saja</option>
+                                                        <option value="text">📝 Teks Langsung Saja</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="px-8 py-5 bg-gray-50 flex flex-row-reverse gap-3">
+                                                <button type="submit" class="bg-indigo-600 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition">Simpan Tugas</button>
+                                                <button type="button" onclick="toggleModal('modal-assignment-{{ $module->id }}')" class="bg-white text-gray-600 px-8 py-2.5 rounded-xl font-bold border border-gray-200 hover:bg-gray-100 transition">Batal</button>
+                                            </div>
+                                        </form>
                                     </div>
                                 </div>
-                            @empty
-                                <p style="color:#94a3b8; font-size:13px; font-style:italic; padding:4px 2px;">Belum ada tugas di modul ini.</p>
-                            @endforelse
-                        </div>
-
-                        {{-- MODAL TAMBAH TUGAS --}}
-                        <div id="modal-assignment-{{ $module->id }}" class="fixed inset-0 z-50 hidden overflow-y-auto">
-                            <div class="flex items-center justify-center min-h-screen p-4">
-                                <div class="fixed inset-0 bg-gray-900 bg-opacity-60" onclick="toggleModal('modal-assignment-{{ $module->id }}')"></div>
-                                <div class="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden text-left">
-                                    <form action="{{ route('teacher.modules.assignments.store', $module->id) }}" method="POST">
-                                        @csrf
-                                        <div class="px-8 py-5 border-b border-gray-100 flex justify-between items-center">
-                                            <h3 class="text-xl font-bold">Tambah Tugas ke: {{ $module->title }}</h3>
-                                            <button type="button" onclick="toggleModal('modal-assignment-{{ $module->id }}')" class="text-gray-400 hover:text-gray-600">
-                                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                            </button>
-                                        </div>
-                                        <div class="p-8 space-y-5">
-                                            <div>
-                                                <label class="block text-sm font-bold text-gray-700 mb-2">Judul Tugas</label>
-                                                <input type="text" name="title" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3" placeholder="Contoh: Tugas 1: Analisis Sistem" required>
-                                            </div>
-                                            
-                                            <div>
-                                                <label class="block text-sm font-bold text-gray-700 mb-2">Instruksi <span class="text-red-500">*</span></label>
-                                                <textarea name="description" rows="4" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3 px-4" placeholder="Tuliskan petunjuk pengerjaan..." required></textarea>
-                                            </div>
-                                            
-                                            <div class="grid grid-cols-2 gap-4">
-                                                <div>
-                                                    <label class="block text-sm font-bold text-gray-700 mb-2">Tenggat Waktu</label>
-                                                    <input type="datetime-local" name="due_date" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3" required>
-                                                </div>
-                                                <div>
-                                                    <label class="block text-sm font-bold text-gray-700 mb-2">Nilai Maksimal</label>
-                                                    <input type="number" name="max_score" min="1" max="100" value="100" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3" required>
-                                                </div>
-                                            </div>
-
-                                            <div>
-                                                <label class="block text-sm font-bold text-gray-700 mb-2">Tipe Pengumpulan</label>
-                                                <select name="submission_type" class="w-full border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 py-3" required>
-                                                    <option value="file">📁 Upload File Saja</option>
-                                                    <option value="text">📝 Teks Langsung Saja</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                        <div class="px-8 py-5 bg-gray-50 flex flex-row-reverse gap-3">
-                                            <button type="submit" class="bg-indigo-600 text-white px-8 py-2.5 rounded-xl font-bold hover:bg-indigo-700 transition">Simpan Tugas</button>
-                                            <button type="button" onclick="toggleModal('modal-assignment-{{ $module->id }}')" class="bg-white text-gray-600 px-8 py-2.5 rounded-xl font-bold border border-gray-200 hover:bg-gray-100 transition">Batal</button>
-                                        </div>
-                                    </form>
-                                </div>
                             </div>
                         </div>
-                    </div>
-                @empty
-                    <div style="text-align:center; padding:48px; background:#f8fafc; border-radius:12px; border:1px dashed #cbd5e1;">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="margin:0 auto 16px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
-                        <p style="color:#64748b; font-weight:500;">Belum ada modul. Buat modul terlebih dahulu di tab Materi untuk menambahkan tugas.</p>
-                    </div>
-                @endforelse
-            </div>
-
-            {{-- TAB QUIZ --}}
-            <div id="tab-quiz" class="tab-content" style="padding:32px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
-                    <h2 style="font-size:18px; font-weight:700; color:#1e293b; margin:0;">
-                        Daftar Quiz
-                        <span style="font-size:14px; font-weight:500; color:#94a3b8; margin-left:8px;">{{ $course->quizzes->count() }} quiz</span>
-                    </h2>
-                    <a href="{{ route('teacher.courses.quizzes.create', $course->id) }}"
-                       style="display:inline-flex; align-items:center; gap:6px; background:#3b5bdb; color:white; font-size:14px; font-weight:600; padding:10px 20px; border-radius:10px; text-decoration:none;">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                        Buat Quiz
-                    </a>
+                    @empty
+                        <div style="text-align:center; padding:48px; background:#f8fafc; border-radius:12px; border:1px dashed #cbd5e1;">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="margin:0 auto 16px;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                            <p style="color:#64748b; font-weight:500;">Belum ada modul. Buat modul terlebih dahulu di tab Materi untuk menambahkan tugas.</p>
+                        </div>
+                    @endforelse
                 </div>
 
-                @forelse($course->quizzes as $quiz)
-                    <div style="background:white; border:1px solid #e2e8f0; border-radius:12px; padding:20px 24px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; gap:16px; transition:box-shadow .2s;"
-                         onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.06)'"
-                         onmouseout="this.style.boxShadow='none'">
-                        <div style="flex:1;">
-                            <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
-                                <span style="font-size:10px; font-weight:700; background:#eff3ff; color:#3b5bdb; padding:2px 8px; border-radius:4px; border:1px solid #c7d2fe;">QUIZ</span>
-                                <h4 style="font-size:16px; font-weight:700; color:#1e293b; margin:0;">{{ $quiz->title }}</h4>
-                            </div>
-                            <div style="display:flex; flex-wrap:wrap; gap:14px; font-size:13px; color:#64748b;">
-                                <span>⏱ {{ $quiz->time_limit }} menit</span>
-                                <span>📋 {{ $quiz->questions->count() }} soal</span>
-                                <span>✅ Lulus: {{ $quiz->passing_score }}%</span>
-                                <span>👥 {{ $quiz->attempts->count() }} attempt</span>
-                            </div>
-                        </div>
-                        <div style="display:flex; gap:8px; flex-shrink:0;">
-                            <a href="{{ route('teacher.quizzes.results', $quiz->id) }}"
-                               style="display:inline-flex; align-items:center; gap:5px; background:#dcfce7; color:#16a34a; font-size:12px; font-weight:700; padding:7px 14px; border-radius:8px; text-decoration:none;">
-                                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-                                Hasil
-                            </a>
-                            <a href="{{ route('teacher.quizzes.show', $quiz->id) }}"
-                               style="display:inline-flex; align-items:center; gap:5px; background:#eff3ff; color:#3b5bdb; font-size:12px; font-weight:700; padding:7px 14px; border-radius:8px; text-decoration:none;">
-                                <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                Kelola Soal
-                            </a>
-                        </div>
-                    </div>
-                @empty
-                    <div style="text-align:center; padding:48px; background:#f8fafc; border-radius:12px; border:1px dashed #cbd5e1;">
-                        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="margin:0 auto 16px;"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                        <p style="color:#64748b; font-weight:500; margin:0 0 12px;">Belum ada quiz di kursus ini.</p>
+                {{-- GARIS PEMBATAS --}}
+                <hr style="border:0; border-top:2px dashed #e2e8f0; margin-bottom:48px;">
+
+                {{-- BAGIAN 2: QUIZ --}}
+                <div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:24px;">
+                        <h2 style="font-size:18px; font-weight:700; color:#1e293b; margin:0;">
+                            Daftar Quiz
+                            <span style="font-size:14px; font-weight:500; color:#94a3b8; margin-left:8px;">{{ $course->quizzes->count() }} quiz</span>
+                        </h2>
                         <a href="{{ route('teacher.courses.quizzes.create', $course->id) }}"
                            style="display:inline-flex; align-items:center; gap:6px; background:#3b5bdb; color:white; font-size:14px; font-weight:600; padding:10px 20px; border-radius:10px; text-decoration:none;">
-                            + Buat Quiz Pertama
+                            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                            Buat Quiz
                         </a>
                     </div>
-                @endforelse
+
+                    @forelse($course->quizzes as $quiz)
+                        <div style="background:white; border:1px solid #e2e8f0; border-radius:12px; padding:20px 24px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; gap:16px; transition:box-shadow .2s;"
+                             onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.06)'"
+                             onmouseout="this.style.boxShadow='none'">
+                            <div style="flex:1;">
+                                <div style="display:flex; align-items:center; gap:10px; margin-bottom:6px;">
+                                    <span style="font-size:10px; font-weight:700; background:#eff3ff; color:#3b5bdb; padding:2px 8px; border-radius:4px; border:1px solid #c7d2fe;">QUIZ</span>
+                                    <h4 style="font-size:16px; font-weight:700; color:#1e293b; margin:0;">{{ $quiz->title }}</h4>
+                                </div>
+                                <div style="display:flex; flex-wrap:wrap; gap:14px; font-size:13px; color:#64748b;">
+                                    <span>⏱ {{ $quiz->time_limit }} menit</span>
+                                    <span>📋 {{ $quiz->questions->count() }} soal</span>
+                                    <span>✅ Lulus: {{ $quiz->passing_score }}%</span>
+                                    <span>👥 {{ $quiz->attempts->count() }} attempt</span>
+                                </div>
+                            </div>
+                            <div style="display:flex; gap:8px; flex-shrink:0;">
+                                <a href="{{ route('teacher.quizzes.results', $quiz->id) }}"
+                                   style="display:inline-flex; align-items:center; gap:5px; background:#dcfce7; color:#16a34a; font-size:12px; font-weight:700; padding:7px 14px; border-radius:8px; text-decoration:none;">
+                                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                                    Hasil
+                                </a>
+                                <a href="{{ route('teacher.quizzes.show', $quiz->id) }}"
+                                   style="display:inline-flex; align-items:center; gap:5px; background:#eff3ff; color:#3b5bdb; font-size:12px; font-weight:700; padding:7px 14px; border-radius:8px; text-decoration:none;">
+                                    <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    Kelola Soal
+                                </a>
+                            </div>
+                        </div>
+                    @empty
+                        <div style="text-align:center; padding:48px; background:#f8fafc; border-radius:12px; border:1px dashed #cbd5e1;">
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="1.5" style="margin:0 auto 16px;"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                            <p style="color:#64748b; font-weight:500; margin:0 0 12px;">Belum ada quiz di kursus ini.</p>
+                            <a href="{{ route('teacher.courses.quizzes.create', $course->id) }}"
+                               style="display:inline-flex; align-items:center; gap:6px; background:#3b5bdb; color:white; font-size:14px; font-weight:600; padding:10px 20px; border-radius:10px; text-decoration:none;">
+                                + Buat Quiz Pertama
+                            </a>
+                        </div>
+                    @endforelse
+                </div>
+
             </div>
 
         </div>
