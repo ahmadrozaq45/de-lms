@@ -42,65 +42,90 @@ class AiService
 
     public function generateStudentRecommendation(User $student, Course $course): AiAnalysis
     {
-        $allMaterialIds = Material::whereHas('module', fn($q) => $q->where('course_id', $course->id))
-            ->pluck('id');
-        $totalMaterials     = $allMaterialIds->count();
-        $completedMaterials = MaterialProgress::where('user_id', $student->id)
-            ->whereIn('material_id', $allMaterialIds)
-            ->where('is_completed', true)
-            ->count();
+        // ── Materi ──
+        $allMaterials = Material::whereHas('module', fn($q) => $q->where('course_id', $course->id))
+            ->with('module:id,title')
+            ->get(['id', 'module_id', 'title']);
+        $totalMaterials = $allMaterials->count();
 
-        $quizAttempts = QuizAttempt::with('quiz')
+        $completedMaterialIds = MaterialProgress::where('user_id', $student->id)
+            ->whereIn('material_id', $allMaterials->pluck('id'))
+            ->where('is_completed', true)
+            ->pluck('material_id');
+
+        $completedMaterials  = $completedMaterialIds->count();
+        $incompleteMaterials = $allMaterials->whereNotIn('id', $completedMaterialIds)->pluck('title')->take(5);
+        $progressPercent     = $totalMaterials > 0 ? round(($completedMaterials / $totalMaterials) * 100) : 0;
+
+        // ── Quiz ──
+        $quizAttempts = QuizAttempt::with('quiz:id,title,course_id')
             ->where('user_id', $student->id)
             ->whereHas('quiz', fn($q) => $q->where('course_id', $course->id))
             ->whereNotNull('score')
             ->get();
 
-        $avgQuizScore  = $quizAttempts->avg('score') ?? 0;
+        $avgQuizScore  = round($quizAttempts->avg('score') ?? 0, 1);
         $failedQuizzes = $quizAttempts->where('is_passed', false)->count();
         $passedQuizzes = $quizAttempts->where('is_passed', true)->count();
+        $quizDetail    = $quizAttempts->map(fn($a) => "{$a->quiz->title}: {$a->score} (" . ($a->is_passed ? 'lulus' : 'tidak lulus') . ")")
+            ->take(8)->implode('; ');
 
-        $submissions = Submission::where('student_id', $student->id)
+        // ── Assignment / Tugas ──
+        $submissions = Submission::with('assignment:id,title,course_id')
+            ->where('student_id', $student->id)
             ->whereHas('assignment', fn($q) => $q->where('course_id', $course->id))
-            ->whereNotNull('score')
             ->get();
 
-        $avgAssignmentScore = $submissions->avg('score') ?? 0;
-        $progressPercent    = $totalMaterials > 0
-            ? round(($completedMaterials / $totalMaterials) * 100)
-            : 0;
+        $gradedSubmissions  = $submissions->whereNotNull('score');
+        $avgAssignmentScore = round($gradedSubmissions->avg('score') ?? 0, 1);
+        $pendingSubmissions = $submissions->where('status', 'pending')->count();
+        $assignmentDetail   = $gradedSubmissions->map(fn($s) => "{$s->assignment->title}: {$s->score}")
+            ->take(8)->implode('; ');
+
+        $incompleteMaterialText = $incompleteMaterials->isNotEmpty()
+            ? $incompleteMaterials->implode(', ')
+            : 'tidak ada (semua materi sudah diselesaikan)';
 
         $prompt = <<<PROMPT
-Kamu adalah AI tutor yang membantu guru menganalisis performa siswa.
+Kamu adalah AI tutor yang membantu guru memahami progres belajar siswa secara menyeluruh.
 
-Data siswa:
-- Nama: {$student->name}
-- Kursus: {$course->title}
-- Progress materi: {$completedMaterials}/{$totalMaterials} ({$progressPercent}%)
-- Rata-rata skor quiz: {$avgQuizScore}/100
-- Quiz tidak lulus: {$failedQuizzes}, Quiz lulus: {$passedQuizzes}
-- Rata-rata skor tugas: {$avgAssignmentScore}/100
+Data aktivitas siswa "{$student->name}" pada kursus "{$course->title}":
 
-Berikan:
-1. Status prediksi singkat (misal: "At Risk", "Excellent", "Needs Improvement", "On Track")
-2. Rekomendasi konkret dalam 2-3 kalimat
+MATERI:
+- Diselesaikan: {$completedMaterials} dari {$totalMaterials} materi ({$progressPercent}%)
+- Materi yang belum diselesaikan: {$incompleteMaterialText}
 
-Format response JSON:
+QUIZ:
+- Rata-rata skor: {$avgQuizScore}/100
+- Lulus: {$passedQuizzes}, Tidak lulus: {$failedQuizzes}
+- Detail per quiz: {$quizDetail}
+
+TUGAS (ASSIGNMENT):
+- Rata-rata skor tugas yang sudah dinilai: {$avgAssignmentScore}/100
+- Tugas belum dinilai/dikumpulkan: {$pendingSubmissions}
+- Detail per tugas: {$assignmentDetail}
+
+Tugasmu:
+1. Tulis RINGKASAN naratif (3-5 kalimat, bahasa Indonesia) tentang apa saja yang sudah dikerjakan dan dicapai siswa ini secara keseluruhan—materi, quiz, dan tugas. Tulis seolah memberi laporan singkat ke guru.
+2. Tentukan status singkat satu/dua kata dari salah satu opsi ini saja: "at_risk", "needs_improvement", "on_track", "excellent", "completed".
+3. Berikan rekomendasi tindak lanjut yang konkret dalam 2-3 kalimat untuk guru atau siswa.
+
+Format response JSON (jawab HANYA JSON, tanpa teks lain, tanpa markdown):
 {
+  "ai_summary": "...",
   "status_prediction": "...",
   "recommendation": "..."
 }
-
-Jawab hanya dengan JSON, tanpa teks lain.
 PROMPT;
 
-        [$statusPrediction, $recommendation] = $this->callApi($prompt);
+        [$statusPrediction, $recommendation, $aiSummary] = $this->callApi($prompt);
 
         return AiAnalysis::updateOrCreate(
             ['user_id' => $student->id, 'course_id' => $course->id],
             [
                 'status_prediction' => $statusPrediction,
                 'recommendation'    => $recommendation,
+                'ai_summary'        => $aiSummary,
             ]
         );
     }
@@ -181,10 +206,11 @@ PROMPT;
             return [
                 $data['status_prediction'] ?? 'Unknown',
                 $data['recommendation']    ?? 'Tidak ada rekomendasi.',
+                $data['ai_summary']        ?? 'Ringkasan belum tersedia.',
             ];
         } catch (\Exception $e) {
             Log::error('AI service error', ['error' => $e->getMessage()]);
-            return ['Unknown', 'Gagal generate rekomendasi.'];
+            return ['Unknown', 'Gagal generate rekomendasi.', 'Gagal generate ringkasan AI.'];
         }
     }
 

@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AiAnalysis extends Model
 {
-    protected $fillable = ['user_id', 'course_id', 'status_prediction', 'recommendation'];
+    protected $fillable = ['user_id', 'course_id', 'status_prediction', 'recommendation', 'ai_summary'];
 
     public function user(): BelongsTo
     {

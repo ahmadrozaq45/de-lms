@@ -53,10 +53,27 @@
 .badge-na   { background:#f1f5f9; color:#94a3b8; font-weight:600; border-radius:6px; padding:2px 7px; font-size:11px; }
 
 /* AI status badge */
-.ai-at_risk   { background:#fef3c7; color:#92400e; }
-.ai-on_track  { background:#dcfce7; color:#166534; }
-.ai-completed { background:#dbeafe; color:#1e40af; }
-.ai-badge     { font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px; }
+.ai-at_risk          { background:#fef3c7; color:#92400e; }
+.ai-needs_improvement{ background:#ffedd5; color:#9a3412; }
+.ai-on_track         { background:#dcfce7; color:#166534; }
+.ai-excellent        { background:#dbeafe; color:#1e40af; }
+.ai-completed        { background:#dbeafe; color:#1e40af; }
+.ai-badge            { font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px; white-space:nowrap; }
+
+/* AI summary text */
+.ai-summary-text {
+    font-size:12px; color:#475569; line-height:1.6;
+    display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden;
+}
+.ai-summary-empty { font-size:12px; color:#94a3b8; font-style:italic; }
+.btn-generate-ai {
+    display:inline-flex; align-items:center; gap:4px;
+    background:#eff6ff; color:#3b5bdb; border:1px solid #bfdbfe;
+    font-size:11px; font-weight:700; padding:4px 10px; border-radius:7px;
+    cursor:pointer; white-space:nowrap;
+}
+.btn-generate-ai:hover { background:#dbeafe; }
+.btn-generate-ai:disabled { opacity:.5; cursor:not-allowed; }
 
 /* Course group header */
 .course-header {
@@ -88,6 +105,14 @@
     background:#eff6ff; border:1px solid #bfdbfe; color:#1d4ed8;
     font-size:11px; font-weight:700; padding:3px 9px; border-radius:99px;
 }
+/* Print-friendly (Export PDF) */
+@media print {
+    .btn-export, .filter-bar, #filterInfo, .btn-generate-ai { display:none !important; }
+    .rp-wrap { max-width:100%; padding:0; }
+    .rp-card { break-inside:avoid; border:1px solid #cbd5e1; }
+    .course-group { break-inside:avoid; }
+    body { -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+}
 </style>
 
 <div class="rp-wrap">
@@ -98,12 +123,20 @@
             <h1 style="font-size:21px; font-weight:800; color:#1e293b; margin:0 0 2px;">Report Admin</h1>
             <p style="font-size:13px; color:#94a3b8; margin:0;">Data seluruh platform — {{ now()->format('d M Y') }}</p>
         </div>
-        <button class="btn-export" onclick="exportToExcel()">
-            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
-                <path d="M12 2v13M6 9l6 6 6-6"/><path d="M4 20h16"/>
-            </svg>
-            Export Excel
-        </button>
+        <div style="display:flex; gap:10px;">
+            <button class="btn-export" style="background:#dc2626;" onclick="exportToPdf()">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/>
+                </svg>
+                Export PDF
+            </button>
+            <button class="btn-export" onclick="exportToExcel()">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                    <path d="M12 2v13M6 9l6 6 6-6"/><path d="M4 20h16"/>
+                </svg>
+                Export Excel
+            </button>
+        </div>
     </div>
 
     {{-- Summary Stats --}}
@@ -199,12 +232,14 @@
                            onchange="document.getElementById('filterForm').submit()">
                 </div>
 
-                {{-- Filter Status AI (client-side) --}}
+                {{-- Filter AI Summarize (client-side) --}}
                 <div class="filter-group">
-                    <span class="filter-group-label">Status AI</span>
+                    <span class="filter-group-label">AI Summarize</span>
                     <select id="filterAi" onchange="filterClientSide()">
                         <option value="">Semua Status</option>
+                        <option value="excellent">Excellent</option>
                         <option value="on_track">On Track</option>
+                        <option value="needs_improvement">Needs Improvement</option>
                         <option value="at_risk">At Risk</option>
                         <option value="completed">Completed</option>
                     </select>
@@ -251,7 +286,7 @@
         {{-- Info filter client-side AI --}}
         <div id="filterInfo" style="margin-top:10px; font-size:12px; color:#94a3b8; display:none;">
             Menampilkan <span id="filterCount" style="font-weight:700; color:#3b5bdb;"></span> dari
-            <span id="filterTotal" style="font-weight:700; color:#475569;"></span> siswa (filter Status AI aktif)
+            <span id="filterTotal" style="font-weight:700; color:#475569;"></span> siswa (filter AI Summarize aktif)
         </div>
     </div>
 
@@ -293,7 +328,8 @@
                         <th style="text-align:center;">Progress Materi</th>
                         <th style="text-align:center;">Rata-rata Quiz</th>
                         <th style="text-align:center;">Quiz Gagal</th>
-                        <th style="text-align:center;">Status AI</th>
+                        <th style="text-align:center;">AI Summarize</th>
+                        <th>Ringkasan AI</th>
                         <th>Rekomendasi AI</th>
                     </tr>
                 </thead>
@@ -354,6 +390,26 @@
                                 <span class="badge-na">–</span>
                             @endif
                         </td>
+                        <td style="max-width:240px;">
+                            <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-start;">
+                                @if($ai?->ai_summary)
+                                    <div class="ai-summary-text" title="{{ $ai->ai_summary }}">
+                                        {{ $ai->ai_summary }}
+                                    </div>
+                                @else
+                                    <span class="ai-summary-empty">Belum di-generate</span>
+                                @endif
+                                <button type="button" class="btn-generate-ai"
+                                        data-student-id="{{ $student->id }}"
+                                        data-course-id="{{ $course->id }}"
+                                        onclick="generateAiSummary(this)">
+                                    <svg width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+                                        <path d="M21 12a9 9 0 11-6.219-8.56"/>
+                                    </svg>
+                                    {{ $ai ? 'Generate Ulang' : 'Generate' }}
+                                </button>
+                            </div>
+                        </td>
                         <td style="max-width:220px;">
                             @if($ai?->recommendation)
                                 <div style="font-size:12px; color:#475569; line-height:1.5;
@@ -363,12 +419,12 @@
                                     {{ $ai->recommendation }}
                                 </div>
                             @else
-                                <span style="font-size:12px; color:#94a3b8;">Belum ada analisis AI</span>
+                                <span style="font-size:12px; color:#94a3b8;">Belum ada rekomendasi</span>
                             @endif
                         </td>
                     </tr>
                     @empty
-                    <tr class="empty-row"><td colspan="6" style="text-align:center; padding:28px; color:#94a3b8;">
+                    <tr class="empty-row"><td colspan="7" style="text-align:center; padding:28px; color:#94a3b8;">
                         Tidak ada siswa aktif di kursus ini.
                     </td></tr>
                     @endforelse
@@ -398,7 +454,7 @@
                 <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
             <div style="font-size:14px; font-weight:600; color:#94a3b8; margin-bottom:4px;">Tidak ada hasil ditemukan</div>
-            <div style="font-size:12px; color:#cbd5e1;">Coba ubah filter Status AI atau <a href="{{ route('admin.report') }}" style="color:#3b5bdb;">reset</a></div>
+            <div style="font-size:12px; color:#cbd5e1;">Coba ubah filter AI Summarize atau <a href="{{ route('admin.report') }}" style="color:#3b5bdb;">reset</a></div>
         </div>
     </div>
 
@@ -452,7 +508,7 @@
 {{-- SheetJS dari CDN --}}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <script>
-// ── Filter client-side (hanya untuk Status AI) ────────────────────────────────
+// ── Filter client-side (hanya untuk AI Summarize) ────────────────────────────────
 function filterClientSide() {
     const ai     = document.getElementById('filterAi').value;
     const groups = document.querySelectorAll('.course-group');
@@ -501,6 +557,46 @@ function debounceSubmit() {
     }, 500);
 }
 
+// ── Generate AI Summary per siswa ──────────────────────────────────────────────
+async function generateAiSummary(btn) {
+    const studentId = btn.dataset.studentId;
+    const courseId  = btn.dataset.courseId;
+    const originalText = btn.innerHTML;
+
+    btn.disabled = true;
+    btn.innerHTML = 'Memproses...';
+
+    try {
+        const response = await fetch('/api/ai/generate-for-student', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+            },
+            credentials: 'same-origin',
+            body: JSON.stringify({ student_id: studentId, course_id: courseId }),
+        });
+
+        if (!response.ok) {
+            throw new Error('Gagal generate AI summary (status ' + response.status + ')');
+        }
+
+        // Refresh halaman agar data ringkasan AI terbaru tampil
+        window.location.reload();
+    } catch (err) {
+        alert('Gagal generate AI summary: ' + err.message + '\n\nPastikan API key provider aktif sudah diisi di Pengaturan > API & AI.');
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+}
+
+// ── Export PDF (via print dialog browser) ──────────────────────────────────────
+function exportToPdf() {
+    document.title = `Report Admin LMS - {{ now()->format('d-m-Y') }}`;
+    window.print();
+}
+
 // ── Export Excel ──────────────────────────────────────────────────────────────
 function exportToExcel() {
     const wb = XLSX.utils.book_new();
@@ -537,7 +633,7 @@ function exportToExcel() {
     XLSX.utils.book_append_sheet(wb, wsSummary, 'Ringkasan');
 
     // Sheet 2: Data siswa (hanya yang visible)
-    const header = ['Kursus','Guru','Tgl Kursus Dibuat','Nama Siswa','Email','Progress (%)','Rata-rata Quiz','Quiz Gagal','Status AI','Rekomendasi AI'];
+    const header = ['Kursus','Guru','Tgl Kursus Dibuat','Nama Siswa','Email','Progress (%)','Rata-rata Quiz','Quiz Gagal','AI Summarize','Ringkasan AI','Rekomendasi AI'];
     const dataRows = [];
     document.querySelectorAll('.course-group').forEach(group => {
         if (group.style.display === 'none') return;
@@ -554,15 +650,17 @@ function exportToExcel() {
             const quiz     = tds[2]?.querySelector('span')?.textContent?.trim() ?? '–';
             const failedQ  = tds[3]?.querySelector('span')?.textContent?.trim() ?? '0x';
             const aiStatus = tds[4]?.querySelector('span')?.textContent?.trim() ?? '–';
-            const aiRec    = tds[5]?.querySelector('div')?.textContent?.trim() ?? '–';
-            dataRows.push([courseName, teacherName, courseDate, name, email, progress, quiz, failedQ, aiStatus, aiRec]);
+            const aiSummary= tds[5]?.querySelector('.ai-summary-text')?.textContent?.trim()
+                           ?? tds[5]?.querySelector('.ai-summary-empty')?.textContent?.trim() ?? '–';
+            const aiRec    = tds[6]?.querySelector('div')?.textContent?.trim() ?? '–';
+            dataRows.push([courseName, teacherName, courseDate, name, email, progress, quiz, failedQ, aiStatus, aiSummary, aiRec]);
         });
     });
 
     const wsData = XLSX.utils.aoa_to_sheet([header, ...dataRows]);
     wsData['!cols'] = [
         {wch:24},{wch:18},{wch:16},{wch:22},{wch:28},
-        {wch:14},{wch:16},{wch:12},{wch:14},{wch:50}
+        {wch:14},{wch:16},{wch:12},{wch:14},{wch:55},{wch:50}
     ];
     XLSX.utils.book_append_sheet(wb, wsData, 'Data Siswa');
 
