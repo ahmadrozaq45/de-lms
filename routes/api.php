@@ -60,5 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('ai')->group(function () {
         Route::get('/analysis/{courseId}', [AiAnalysisController::class, 'getAnalysis']);
         Route::post('/analysis', [AiAnalysisController::class, 'storeAnalysis']);
+        Route::post('/generate/{courseId}', [AiAnalysisController::class, 'generateForMe']);
+        Route::post('/generate-for-student', [AiAnalysisController::class, 'generateForStudent']);
     });
 });
