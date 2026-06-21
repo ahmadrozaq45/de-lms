@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 class Course extends Model
 {
-    protected $fillable = ['title', 'description', 'teacher_id','course_code'];
+    protected $fillable = ['title', 'description', 'teacher_id','course_code', 'category_id'];
     protected static function booted(): void
     {
         // Generate course_code otomatis saat membuat kursus baru
@@ -42,8 +42,8 @@ class Course extends Model
         return $this->hasMany(Quiz::class);
     }
 
-    public function categories(): BelongsToMany
+    public function categories(): BelongsTo
     {
-        return $this->belongsToMany(Categories::class, 'category_id');
+        return $this->belongsTo(Categories::class, 'category_id');
     }
 }

@@ -35,6 +35,22 @@
                         </div>
 
                         <div class="mb-5">
+                            <label for="category_id" class="block text-sm font-medium text-gray-700 mb-1">Kategori Kelas <span class="text-red-500">*</span></label>
+                            <select name="category_id" id="category_id"
+                                    class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 @error('category_id') border-red-500 @enderror" required>
+                                <option value="" disabled {{ old('category_id') ? '' : 'selected' }}>-- Pilih Kategori --</option>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->id }}" {{ old('category_id') == $category->id ? 'selected' : '' }}>
+                                        {{ $category->name }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            @error('category_id')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <div class="mb-5">
                             <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Deskripsi</label>
                             <textarea name="description" id="description" rows="4"
                                       class="w-full border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 @error('description') border-red-500 @enderror"

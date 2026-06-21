@@ -27,7 +27,8 @@ class CourseController extends Controller
 
         // Web (guru)
         $courses = Course::with('modules')->where('teacher_id', Auth::id())->latest()->get();
-        return view('teacher.courses.index', compact('courses'));
+        $categories = \App\Models\Categories::all();
+        return view('teacher.courses.index', compact('courses', 'categories'));
     }
 
     /**
@@ -35,6 +36,8 @@ class CourseController extends Controller
      */
     public function create()
     {
+        $categories = \App\Models\Categories::all();
+        return view('teacher.courses.create', compact('categories'));
         return view('teacher.courses.create');
     }
 
@@ -47,6 +50,7 @@ class CourseController extends Controller
         $validated = $request->validate([
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
+            'category_id' => 'required|exists:categories,id',
         ]);
 
         $validated['teacher_id'] = Auth::id();
@@ -95,7 +99,8 @@ class CourseController extends Controller
     public function edit(int $id)
     {
         $course = Course::where('teacher_id', Auth::id())->findOrFail($id);
-        return view('teacher.courses.edit', compact('course'));
+        $categories = \App\Models\Categories::all();
+        return view('teacher.courses.edit', compact('course', 'categories'));
     }
 
     /**
@@ -108,6 +113,7 @@ class CourseController extends Controller
         $course->update($request->validate([
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
+            'category_id' => 'required|exists:categories,id',
         ]));
 
         if ($request->expectsJson()) {
