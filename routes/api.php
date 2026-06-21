@@ -14,7 +14,7 @@ use App\Http\Controllers\ForumController;
 use App\Http\Controllers\TrackingController;
 use App\Http\Controllers\AiAnalysisController;
 
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware(['auth:sanctum,web'])->group(function () {
 
     // --- 1. USER & PROFILE ---
     Route::prefix('user')->group(function () {

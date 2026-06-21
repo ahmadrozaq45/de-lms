@@ -148,7 +148,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
              ->name('quizzes.result');
     });
 
-     // ── RECOMMENDATIONS (semua role) ─────────────────────────────────────
+     // ── AI GENERATE (web route agar pakai session) ──────────────────────────
+    Route::post('/web/ai/generate-for-student', [\App\Http\Controllers\AiAnalysisController::class, 'generateForStudent'])
+         ->name('ai.generate-for-student');
+
+    // ── RECOMMENDATIONS (semua role) ─────────────────────────────────────
      Route::prefix('recommendations')->name('recommendations.')->group(function () {
         Route::get('/',               [RecommendationController::class, 'index'])    ->name('index');
         Route::get('/widget',         [RecommendationController::class, 'widget'])   ->name('widget');

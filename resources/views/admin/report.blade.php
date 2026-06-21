@@ -328,9 +328,9 @@
                         <th style="text-align:center;">Progress Materi</th>
                         <th style="text-align:center;">Rata-rata Quiz</th>
                         <th style="text-align:center;">Quiz Gagal</th>
-                        <th style="text-align:center;">AI Summarize</th>
-                        <th>Ringkasan AI</th>
-                        <th>Rekomendasi AI</th>
+                        <th style="text-align:center; width:110px;">Status AI</th>
+                        <th style="min-width:200px;">Ringkasan AI</th>
+                        <th style="min-width:200px;">Rekomendasi AI</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -381,7 +381,7 @@
                                 <span class="badge-pass">0x</span>
                             @endif
                         </td>
-                        <td style="text-align:center;">
+                        <td style="text-align:center; width:110px;">
                             @if($ai)
                                 <span class="ai-badge ai-{{ $ai->status_prediction }}">
                                     {{ ucfirst(str_replace('_',' ', $ai->status_prediction)) }}
@@ -390,14 +390,23 @@
                                 <span class="badge-na">–</span>
                             @endif
                         </td>
-                        <td style="max-width:240px;">
+                        <td>
+                            @if($ai?->ai_summary)
+                                <div style="font-size:12px; color:#475569; line-height:1.6; max-width:260px;">
+                                    {{ $ai->ai_summary }}
+                                </div>
+                            @else
+                                <span style="font-size:12px; color:#94a3b8; font-style:italic;">Belum di-generate</span>
+                            @endif
+                        </td>
+                        <td>
                             <div style="display:flex; flex-direction:column; gap:6px; align-items:flex-start;">
-                                @if($ai?->ai_summary)
-                                    <div class="ai-summary-text" title="{{ $ai->ai_summary }}">
-                                        {{ $ai->ai_summary }}
+                                @if($ai?->recommendation)
+                                    <div style="font-size:12px; color:#475569; line-height:1.6; max-width:260px;">
+                                        {{ $ai->recommendation }}
                                     </div>
                                 @else
-                                    <span class="ai-summary-empty">Belum di-generate</span>
+                                    <span style="font-size:12px; color:#94a3b8; font-style:italic;">Belum di-generate</span>
                                 @endif
                                 <button type="button" class="btn-generate-ai"
                                         data-student-id="{{ $student->id }}"
@@ -409,18 +418,6 @@
                                     {{ $ai ? 'Generate Ulang' : 'Generate' }}
                                 </button>
                             </div>
-                        </td>
-                        <td style="max-width:220px;">
-                            @if($ai?->recommendation)
-                                <div style="font-size:12px; color:#475569; line-height:1.5;
-                                            display:-webkit-box; -webkit-line-clamp:2;
-                                            -webkit-box-orient:vertical; overflow:hidden;"
-                                     title="{{ $ai->recommendation }}">
-                                    {{ $ai->recommendation }}
-                                </div>
-                            @else
-                                <span style="font-size:12px; color:#94a3b8;">Belum ada rekomendasi</span>
-                            @endif
                         </td>
                     </tr>
                     @empty
@@ -567,7 +564,7 @@ async function generateAiSummary(btn) {
     btn.innerHTML = 'Memproses...';
 
     try {
-        const response = await fetch('/api/ai/generate-for-student', {
+        const response = await fetch('{{ route("ai.generate-for-student") }}', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -633,7 +630,7 @@ function exportToExcel() {
     XLSX.utils.book_append_sheet(wb, wsSummary, 'Ringkasan');
 
     // Sheet 2: Data siswa (hanya yang visible)
-    const header = ['Kursus','Guru','Tgl Kursus Dibuat','Nama Siswa','Email','Progress (%)','Rata-rata Quiz','Quiz Gagal','AI Summarize','Ringkasan AI','Rekomendasi AI'];
+    const header = ['Kursus','Guru','Tgl Kursus Dibuat','Nama Siswa','Email','Progress (%)','Rata-rata Quiz','Quiz Gagal','Status AI','Analisis & Rekomendasi AI'];
     const dataRows = [];
     document.querySelectorAll('.course-group').forEach(group => {
         if (group.style.display === 'none') return;
