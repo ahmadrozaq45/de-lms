@@ -26,6 +26,7 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'preferred_ai_provider',
     ];
 
     /**

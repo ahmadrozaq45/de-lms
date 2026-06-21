@@ -26,16 +26,69 @@ class AiService
         'openai'    => 'gpt-4o-mini',
     ];
 
-    public function __construct()
+    public function __construct(?string $providerOverride = null)
     {
-        $this->provider = \App\Models\Setting::get('ai_provider', 'anthropic');
+        $globalDefault = \App\Models\Setting::get('ai_provider', 'anthropic');
 
-        // Baca API key dan model dari setting global (tanpa suffix provider)
-        $this->apiKey = \App\Models\Setting::get('ai_api_key', '')
+        // Prioritas pemilihan provider:
+        // 1. Override eksplisit (mis. dipanggil dengan provider spesifik)
+        // 2. Preferensi pribadi user yang sedang login (diatur di Settings)
+        // 3. Provider aktif global yang diatur admin
+        $resolved = $providerOverride;
+
+        if (!$resolved && \Illuminate\Support\Facades\Auth::check()) {
+            $resolved = \Illuminate\Support\Facades\Auth::user()->preferred_ai_provider;
+        }
+
+        if (!$resolved || !array_key_exists($resolved, self::ENDPOINTS)) {
+            $resolved = $globalDefault;
+        }
+
+        // Jika provider terpilih ternyata belum diisi key-nya, jangan paksa—
+        // turun ke provider global yang sudah pasti dipakai admin.
+        $resolvedKey = \App\Models\Setting::get("ai_api_key_{$resolved}", '');
+        if (trim((string) $resolvedKey) === '' && $resolved !== $globalDefault) {
+            $resolved = $globalDefault;
+        }
+
+        $this->provider = $resolved;
+
+        // Baca API key dan model per provider (sesuai SettingController & UI: 4 card terpisah)
+        $this->apiKey = \App\Models\Setting::get("ai_api_key_{$this->provider}", '')
             ?: config("services.{$this->provider}.key", '');
 
-        $this->model = \App\Models\Setting::get('ai_model', '')
+        $this->model = \App\Models\Setting::get("ai_model_{$this->provider}", '')
             ?: self::DEFAULT_MODELS[$this->provider] ?? 'llama-3.1-8b-instant';
+    }
+
+    /**
+     * Daftar provider yang sudah diisi API key oleh admin (siap dipakai).
+     * Dipakai untuk menampilkan pilihan provider ke guru/admin di UI.
+     */
+    public static function availableProviders(): array
+    {
+        $labels = [
+            'anthropic' => 'Anthropic (Claude)',
+            'gemini'    => 'Google Gemini',
+            'groq'      => 'Groq (Llama)',
+            'openai'    => 'OpenAI (GPT)',
+        ];
+
+        $active = \App\Models\Setting::get('ai_provider', 'anthropic');
+        $result = [];
+
+        foreach ($labels as $key => $label) {
+            $hasKey = trim((string) \App\Models\Setting::get("ai_api_key_{$key}", '')) !== '';
+            if ($hasKey) {
+                $result[] = [
+                    'value'    => $key,
+                    'label'    => $label,
+                    'is_default' => $key === $active,
+                ];
+            }
+        }
+
+        return $result;
     }
 
     // ── Public Methods ────────────────────────────────────────────────────────

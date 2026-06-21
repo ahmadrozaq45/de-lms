@@ -102,6 +102,9 @@
                         ['certificate','Sertifikat'],
                     ]);
                 }
+                if($user->role === 'teacher') {
+                    $tabs = array_merge($tabs, [['ai-preference','Preferensi AI']]);
+                }
             @endphp
             @foreach($tabs as [$id,$label])
             <button class="tab-btn {{ $activeTab === $id ? 'active' : '' }}"
@@ -178,6 +181,28 @@
                 <button type="submit" class="btn-danger">Hapus Akun Selamanya</button>
             </form>
         </div>
+
+        @if($user->role === 'teacher')
+        {{-- TAB: Preferensi AI (Guru) --}}
+        <div id="tab-ai-preference" class="tab-content {{ $activeTab==='ai-preference' ? 'active' : '' }}"
+             style="padding:24px;">
+            <p class="sec-title">Preferensi Provider AI</p>
+            <p class="sec-desc">
+                Pilih provider AI yang ingin Anda gunakan saat men-generate AI Summarize siswa di halaman Report.
+                API key tetap dikelola oleh admin — Anda hanya memilih provider mana yang dipakai.
+            </p>
+
+            <form method="POST" action="{{ route('settings.ai-preference') }}" id="aiPreferenceForm">
+                @csrf @method('PATCH')
+
+                <div id="aiProviderOptions" style="margin-bottom:20px;">
+                    <p style="font-size:13px; color:#94a3b8;">Memuat daftar provider...</p>
+                </div>
+
+                <button type="submit" class="btn-save">Simpan Preferensi</button>
+            </form>
+        </div>
+        @endif
 
         @if($user->role === 'admin')
 
@@ -524,6 +549,53 @@ if (footerInput) {
         const el = document.getElementById('certFooterPreview');
         if (el) el.textContent = footerInput.value;
     });
+}
+
+// ── Preferensi AI (Guru): muat daftar provider yang sudah diisi key oleh admin ──
+const aiProviderContainer = document.getElementById('aiProviderOptions');
+if (aiProviderContainer) {
+    (async () => {
+        const currentPreference = @json($user->preferred_ai_provider ?? '');
+
+        try {
+            const res = await fetch('/web/ai/providers', {
+                headers: { 'Accept': 'application/json' },
+                credentials: 'same-origin',
+            });
+            const providers = res.ok ? await res.json() : [];
+
+            if (providers.length === 0) {
+                aiProviderContainer.innerHTML = `
+                    <div style="background:#fef3c7; border:1px solid #fde68a; border-radius:10px; padding:14px 16px;
+                                font-size:13px; color:#92400e;">
+                        Belum ada provider AI yang diisi API key oleh admin. Hubungi admin untuk mengaktifkan minimal satu provider.
+                    </div>`;
+                return;
+            }
+
+            let html = '';
+            providers.forEach(p => {
+                const checked = (currentPreference === p.value) || (!currentPreference && p.is_default);
+                html += `
+                    <label style="display:flex; align-items:center; gap:10px; padding:12px 16px;
+                                  border:1.5px solid ${checked ? '#3b5bdb' : '#e2e8f0'}; border-radius:10px;
+                                  margin-bottom:10px; cursor:pointer; background:${checked ? '#f8faff' : 'white'};">
+                        <input type="radio" name="preferred_ai_provider" value="${p.value}" ${checked ? 'checked' : ''}
+                               style="width:16px; height:16px; accent-color:#3b5bdb;"
+                               onchange="document.querySelectorAll('#aiProviderOptions label').forEach(l => {
+                                   l.style.borderColor = '#e2e8f0'; l.style.background = 'white';
+                               }); this.closest('label').style.borderColor = '#3b5bdb';
+                               this.closest('label').style.background = '#f8faff';">
+                        <span style="font-size:13px; font-weight:600; color:#1e293b;">${p.label}</span>
+                        ${p.is_default ? '<span style="font-size:11px; font-weight:700; color:#3b5bdb; background:#dbeafe; padding:2px 8px; border-radius:6px;">Default Admin</span>' : ''}
+                    </label>`;
+            });
+            aiProviderContainer.innerHTML = html;
+        } catch (e) {
+            aiProviderContainer.innerHTML = `
+                <div style="font-size:13px; color:#dc2626;">Gagal memuat daftar provider. Coba muat ulang halaman.</div>`;
+        }
+    })();
 }
 </script>
 </x-app-layout>

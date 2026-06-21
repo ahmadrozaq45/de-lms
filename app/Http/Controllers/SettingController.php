@@ -177,11 +177,45 @@ class SettingController extends Controller
             ->with('tab', 'certificate');
     }
 
+    // ── Teacher: Preferensi Provider AI ─────────────────────────────────────
+
+    public function updateAiPreference(Request $request)
+    {
+        $this->authorizeTeacher();
+
+        $request->validate([
+            'preferred_ai_provider' => 'required|string|in:anthropic,gemini,groq,openai',
+        ]);
+
+        $user = Auth::user();
+
+        // Pastikan provider yang dipilih memang sudah diisi key oleh admin.
+        $hasKey = trim((string) Setting::get("ai_api_key_{$request->preferred_ai_provider}", '')) !== '';
+        if (!$hasKey) {
+            return redirect()->route('settings.index')
+                ->withErrors(['preferred_ai_provider' => 'Provider yang dipilih belum diisi API key oleh admin.'])
+                ->with('tab', 'ai-preference');
+        }
+
+        $user->update(['preferred_ai_provider' => $request->preferred_ai_provider]);
+
+        return redirect()->route('settings.index')
+            ->with('success', 'Preferensi provider AI berhasil disimpan.')
+            ->with('tab', 'ai-preference');
+    }
+
     // ── Helper ───────────────────────────────────────────────────────────────
 
     private function authorizeAdmin(): void
     {
         if (Auth::user()->role !== 'admin') {
+            abort(403, 'Akses ditolak.');
+        }
+    }
+
+    private function authorizeTeacher(): void
+    {
+        if (Auth::user()->role !== 'teacher') {
             abort(403, 'Akses ditolak.');
         }
     }

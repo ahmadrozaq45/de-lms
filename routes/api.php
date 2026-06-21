@@ -62,5 +62,6 @@ Route::middleware(['auth:sanctum,web'])->group(function () {
         Route::post('/analysis', [AiAnalysisController::class, 'storeAnalysis']);
         Route::post('/generate/{courseId}', [AiAnalysisController::class, 'generateForMe']);
         Route::post('/generate-for-student', [AiAnalysisController::class, 'generateForStudent']);
+        Route::get('/providers', [AiAnalysisController::class, 'availableProviders']);
     });
 });
