@@ -27,6 +27,9 @@ Route::get('/dashboard', [DashboardController::class, 'index'])
 
 Route::middleware(['auth', 'verified'])->group(function () {
 
+     Route::get('/web/ai/providers', [\App\Http\Controllers\AiAnalysisController::class, 'availableProviders'])
+     ->name('ai.providers');
+
     // Profile (semua role)
     Route::get('/profile',    [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile',  [ProfileController::class, 'update'])->name('profile.update');
@@ -50,6 +53,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('/settings/theme',       [SettingController::class, 'updateTheme'])->name('settings.theme');
     Route::patch('/settings/landingpage', [SettingController::class, 'updateLandingPage'])->name('settings.landingpage');
     Route::patch('/settings/certificate', [SettingController::class, 'updateCertificate'])->name('settings.certificate');
+
+    // Teacher-only setting route
+    Route::patch('/settings/ai-preference', [SettingController::class, 'updateAiPreference'])->name('settings.ai-preference');
 
     // ── GURU ─────────────────────────────────────────────────────────────────
     Route::middleware(['role:teacher'])->prefix('teacher')->name('teacher.')->group(function () {

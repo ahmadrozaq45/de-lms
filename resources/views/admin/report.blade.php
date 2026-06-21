@@ -311,7 +311,7 @@
                 <h3>{{ $course->title }}</h3>
                 <span class="course-meta">Guru: {{ $course->teacher->name ?? '–' }}</span>
                 <span style="font-size:11px; color:#94a3b8; margin-left:8px;">
-                    Dibuat {{ $course->created_at->format('d M Y') }}
+                    <span class="course-date">Dibuat {{ $course->created_at->format('d M Y') }}</span>
                 </span>
             </div>
             <div style="font-size:12px; color:#64748b; font-weight:600;">
@@ -629,35 +629,34 @@ function exportToExcel() {
     wsSummary['!cols'] = [{wch:28},{wch:14}];
     XLSX.utils.book_append_sheet(wb, wsSummary, 'Ringkasan');
 
-    // Sheet 2: Data siswa (hanya yang visible)
-    const header = ['Kursus','Guru','Tgl Kursus Dibuat','Nama Siswa','Email','Progress (%)','Rata-rata Quiz','Quiz Gagal','Status AI','Analisis & Rekomendasi AI'];
+    // Sheet 2: Data Siswa per Kursus
+    const header = ['Kursus','Guru','Tgl Kursus Dibuat','Nama Siswa','Email','Progress (%)','Rata-rata Quiz','Quiz Gagal','Status AI','Ringkasan AI','Rekomendasi AI'];
     const dataRows = [];
     document.querySelectorAll('.course-group').forEach(group => {
         if (group.style.display === 'none') return;
         const headerEl    = group.querySelector('.course-header');
         const courseName  = headerEl?.querySelector('h3')?.textContent?.trim() ?? '';
         const teacherName = headerEl?.querySelector('.course-meta')?.textContent?.replace('Guru: ','')?.trim() ?? '';
-        const courseDate  = headerEl?.querySelector('span[style*="94a3b8"]')?.textContent?.trim()?.replace('Dibuat ','') ?? '';
+        const courseDate  = headerEl?.querySelector('.course-date')?.textContent?.trim() ?? '';
         group.querySelectorAll('.report-row').forEach(row => {
             if (row.style.display === 'none') return;
             const tds      = row.querySelectorAll('td');
-            const name     = tds[0]?.querySelector('div')?.textContent?.trim() ?? '';
-            const email    = tds[0]?.querySelectorAll('div')[1]?.textContent?.trim() ?? '';
+            const name     = tds[0]?.querySelector('div:first-child')?.textContent?.trim() ?? '';
+            const email    = tds[0]?.querySelector('div:last-child')?.textContent?.trim() ?? '';
             const progress = tds[1]?.querySelector('.prog-lbl')?.textContent?.trim() ?? '';
             const quiz     = tds[2]?.querySelector('span')?.textContent?.trim() ?? '–';
             const failedQ  = tds[3]?.querySelector('span')?.textContent?.trim() ?? '0x';
             const aiStatus = tds[4]?.querySelector('span')?.textContent?.trim() ?? '–';
-            const aiSummary= tds[5]?.querySelector('.ai-summary-text')?.textContent?.trim()
-                           ?? tds[5]?.querySelector('.ai-summary-empty')?.textContent?.trim() ?? '–';
+            const aiRingkasan = tds[5]?.querySelector('div')?.textContent?.trim() ?? '–';
             const aiRec    = tds[6]?.querySelector('div')?.textContent?.trim() ?? '–';
-            dataRows.push([courseName, teacherName, courseDate, name, email, progress, quiz, failedQ, aiStatus, aiSummary, aiRec]);
+            dataRows.push([courseName, teacherName, courseDate, name, email, progress, quiz, failedQ, aiStatus, aiRingkasan, aiRec]);
         });
     });
 
     const wsData = XLSX.utils.aoa_to_sheet([header, ...dataRows]);
     wsData['!cols'] = [
         {wch:24},{wch:18},{wch:16},{wch:22},{wch:28},
-        {wch:14},{wch:16},{wch:12},{wch:14},{wch:55},{wch:50}
+        {wch:14},{wch:16},{wch:12},{wch:14},{wch:45},{wch:45}
     ];
     XLSX.utils.book_append_sheet(wb, wsData, 'Data Siswa');
 

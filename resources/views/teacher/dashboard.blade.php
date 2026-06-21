@@ -367,8 +367,7 @@
     ══════════════════════════════════════ --}}
     <div class="row2">
 
-        {{-- Materi yang Perlu Diulang (AI Insight) --}}
-        {{-- Karena tidak ada kolom analysis_type, gunakan status_prediction = 'needs_improvement' --}}
+        {{-- Rekomendasi untuk Siswa (AI Insight) --}}
         <div class="ai-card">
             <div class="ai-badge">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
@@ -380,47 +379,69 @@
                 Rekomendasi untuk Siswa
                 <span class="sec-sub"> — perlu peningkatan</span>
             </p>
-            @php
-                $aiMaterialInsights = \App\Models\AiAnalysis::where('status_prediction', 'needs_improvement')
-                    ->whereHas('course', fn($q) => $q->where('teacher_id', Auth::id()))
-                    ->with(['course', 'user'])
-                    ->latest()
-                    ->limit(5)
-                    ->get();
-            @endphp
-            @forelse($aiMaterialInsights as $insight)
-            <div style="background:white; border:1px solid #c7d2fe; border-radius:10px;
-                        padding:12px 14px; margin-bottom:10px;">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
-                    <div style="min-width:0;">
-                        <div style="font-weight:700; color:#1e293b; font-size:13px; margin-bottom:4px;">
-                            {{ $insight->user->name ?? '–' }}
+
+            {{-- Scrollable container --}}
+            <div style="max-height:320px; overflow-y:auto; padding-right:4px;
+                        scrollbar-width:thin; scrollbar-color:#c7d2fe transparent;">
+                @php
+                    $aiMaterialInsights = \App\Models\AiAnalysis::whereIn('status_prediction', ['needs_improvement', 'at_risk'])
+                        ->whereHas('course', fn($q) => $q->where('teacher_id', Auth::id()))
+                        ->with(['course', 'user'])
+                        ->latest()
+                        ->limit(5)
+                        ->get();
+                @endphp
+                @forelse($aiMaterialInsights as $insight)
+                <div style="background:white; border:1px solid #c7d2fe; border-radius:10px;
+                            padding:12px 14px; margin-bottom:10px;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px;">
+                        <div style="display:flex; align-items:center; gap:9px; min-width:0;">
+                            <div class="avatar" style="flex-shrink:0;">
+                                {{ strtoupper(substr($insight->user->name ?? '?', 0, 1)) }}
+                            </div>
+                            <div style="min-width:0;">
+                                <div style="font-weight:700; color:#1e293b; font-size:13px;">
+                                    {{ $insight->user->name ?? '–' }}
+                                </div>
+                                <div style="font-size:11px; color:#94a3b8;">
+                                    {{ $insight->course->title ?? '–' }}
+                                </div>
+                            </div>
                         </div>
-                        <div style="font-size:11px; color:#94a3b8;">
-                            {{ Str::limit($insight->course->title ?? '–', 36) }}
-                        </div>
+                        @php
+                            $badgeMap = [
+                                'at_risk'           => ['bg' => '#fee2e2', 'color' => '#991b1b', 'label' => 'Berisiko'],
+                                'needs_improvement' => ['bg' => '#fef3c7', 'color' => '#92400e', 'label' => 'Perlu Peningkatan'],
+                            ];
+                            $b = $badgeMap[$insight->status_prediction] ?? ['bg' => '#f1f5f9', 'color' => '#64748b', 'label' => ucfirst($insight->status_prediction)];
+                        @endphp
+                        <span style="flex-shrink:0; font-size:11px; font-weight:700; padding:3px 8px;
+                                    border-radius:99px; background:{{ $b['bg'] }}; color:{{ $b['color'] }};">
+                            {{ $b['label'] }}
+                        </span>
                     </div>
-                    <span class="badge-warn" style="flex-shrink:0;">Perlu Peningkatan</span>
+
+                    @if($insight->recommendation)
+                    <p style="font-size:12px; color:#64748b; margin:6px 0 0; line-height:1.6;">
+                        <span style="font-weight:700; color:#94a3b8;"></span>
+                        {{ $insight->recommendation }}
+                    </p>
+                    @endif
                 </div>
-                @if($insight->recommendation)
-                <p style="font-size:12px; color:#64748b; margin:8px 0 0; line-height:1.5;">
-                    {{ Str::limit($insight->recommendation, 120) }}
-                </p>
-                @endif
+                @empty
+                <div style="text-align:center; padding:28px 0; color:#94a3b8;">
+                    <svg width="36" height="36" fill="none" stroke="#cbd5e1" stroke-width="1.5"
+                        viewBox="0 0 24 24" style="margin:0 auto 8px; display:block;">
+                        <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3M5.636 5.636l.707.707M12 21v-1"/>
+                        <circle cx="12" cy="12" r="4"/>
+                    </svg>
+                    <p style="margin:0; font-size:13px;">Belum ada analisis AI.</p>
+                    <p style="margin:4px 0 0; font-size:11px;">
+                        Jalankan analisis dari halaman Report untuk menghasilkan insight.
+                    </p>
+                </div>
+                @endforelse
             </div>
-            @empty
-            <div style="text-align:center; padding:28px 0; color:#94a3b8;">
-                <svg width="36" height="36" fill="none" stroke="#cbd5e1" stroke-width="1.5"
-                     viewBox="0 0 24 24" style="margin:0 auto 8px; display:block;">
-                    <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3M5.636 5.636l.707.707M12 21v-1"/>
-                    <circle cx="12" cy="12" r="4"/>
-                </svg>
-                <p style="margin:0; font-size:13px;">Belum ada analisis AI.</p>
-                <p style="margin:4px 0 0; font-size:11px;">
-                    Jalankan analisis dari halaman Report untuk menghasilkan insight.
-                </p>
-            </div>
-            @endforelse
         </div>
 
         {{-- Siswa yang Perlu Perhatian (AI Insight) --}}
@@ -431,53 +452,57 @@
                 </svg>
                 AI Insight
             </div>
-            <p class="sec-title" style="margin:0 0 14px;">
-                Siswa yang Perlu Perhatian
-            </p>
-            @php
-                $atRiskStudents = \App\Models\AiAnalysis::where('status_prediction', 'at_risk')
-                    ->whereHas('course', fn($q) => $q->where('teacher_id', Auth::id()))
-                    ->with(['user', 'course'])
-                    ->latest()
-                    ->limit(5)
-                    ->get();
-            @endphp
-            @forelse($atRiskStudents as $analysis)
-            <div style="background:white; border:1px solid #c7d2fe; border-radius:10px;
-                        padding:12px 14px; margin-bottom:10px;">
-                <div style="display:flex; align-items:center; gap:10px;">
-                    <div class="avatar"
-                         style="background:linear-gradient(135deg,#f43f5e,#ec4899); flex-shrink:0;">
-                        {{ strtoupper(substr($analysis->user->name ?? '?', 0, 1)) }}
-                    </div>
-                    <div style="flex:1; min-width:0;">
-                        <div style="font-weight:700; color:#1e293b; font-size:13px;">
-                            {{ $analysis->user->name ?? '–' }}
+            <p class="sec-title" style="margin:0 0 14px;">Siswa yang Perlu Perhatian</p>
+
+            {{-- Scrollable container --}}
+            <div style="max-height:320px; overflow-y:auto; padding-right:4px;
+                        scrollbar-width:thin; scrollbar-color:#c7d2fe transparent;">
+                @php
+                    $atRiskStudents = \App\Models\AiAnalysis::where('status_prediction', 'at_risk')
+                        ->whereHas('course', fn($q) => $q->where('teacher_id', Auth::id()))
+                        ->with(['user', 'course'])
+                        ->latest()
+                        ->limit(5)
+                        ->get();
+                @endphp
+                @forelse($atRiskStudents as $analysis)
+                <div style="background:white; border:1px solid #c7d2fe; border-radius:10px;
+                            padding:12px 14px; margin-bottom:10px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <div class="avatar"
+                            style="background:linear-gradient(135deg,#f43f5e,#ec4899); flex-shrink:0;">
+                            {{ strtoupper(substr($analysis->user->name ?? '?', 0, 1)) }}
                         </div>
-                        <div style="font-size:11px; color:#94a3b8;">
-                            {{ Str::limit($analysis->course->title ?? '–', 32) }}
+                        <div style="flex:1; min-width:0;">
+                            <div style="font-weight:700; color:#1e293b; font-size:13px;">
+                                {{ $analysis->user->name ?? '–' }}
+                            </div>
+                            <div style="font-size:11px; color:#94a3b8;">
+                                {{ $analysis->course->title ?? '–' }}
+                            </div>
                         </div>
+                        <span class="badge-fail" style="flex-shrink:0;">Berisiko</span>
                     </div>
-                    <span class="badge-fail">Berisiko</span>
+
+                    @if($analysis->ai_summary)
+                    <p style="font-size:12px; color:#64748b; margin:6px 0 0; line-height:1.6;">
+                        <span style="font-weight:700; color:#94a3b8;"></span>
+                        {{ $analysis->ai_summary }}
+                    </p>
+                    @endif
                 </div>
-                @if($analysis->recommendation)
-                <p style="font-size:12px; color:#64748b; margin:8px 0 0; line-height:1.5;">
-                    {{ Str::limit($analysis->recommendation, 120) }}
-                </p>
-                @endif
+                @empty
+                <div style="text-align:center; padding:28px 0; color:#94a3b8;">
+                    <svg width="36" height="36" fill="none" stroke="#cbd5e1" stroke-width="1.5"
+                        viewBox="0 0 24 24" style="margin:0 auto 8px; display:block;">
+                        <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                        <circle cx="9" cy="7" r="4"/>
+                        <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+                    </svg>
+                    <p style="margin:0; font-size:13px;">Tidak ada siswa berisiko saat ini.</p>
+                </div>
+                @endforelse
             </div>
-            @empty
-            <div style="text-align:center; padding:28px 0; color:#94a3b8;">
-                <svg width="36" height="36" fill="none" stroke="#cbd5e1" stroke-width="1.5"
-                     viewBox="0 0 24 24" style="margin:0 auto 8px; display:block;">
-                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
-                </svg>
-                <p style="margin:0; font-size:13px;">Tidak ada siswa berisiko saat ini.</p>
-                <p style="margin:4px 0 0; font-size:11px;">Semua siswa dalam kondisi baik.</p>
-            </div>
-            @endforelse
         </div>
     </div>
 

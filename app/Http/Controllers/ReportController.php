@@ -106,7 +106,44 @@ class ReportController extends Controller
             'pending'     => Submission::whereIn('course_id', $courseIds)->where('status', 'pending')->count(),
         ];
 
-        return view('teacher.report', compact('courseStats', 'totals'));
+        // ── Data per-siswa untuk panel AI Summarize ──
+        $studentsByCourse = $courses->map(function ($course) {
+            $enrolled = \App\Models\CourseEnrollment::where('course_id', $course->id)
+                ->where('status', 'approved')
+                ->with('user')
+                ->get();
+
+            $students = $enrolled->map(function ($enrollment) use ($course) {
+                $student = $enrollment->user;
+
+                $matIds = Material::whereHas('module', fn($q) => $q->where('course_id', $course->id))->pluck('id');
+                $total  = $matIds->count();
+                $done   = MaterialProgress::where('user_id', $student->id)
+                    ->whereIn('material_id', $matIds)->where('is_completed', true)->count();
+                $pct    = $total > 0 ? round($done / $total * 100) : 0;
+
+                $avgQ = QuizAttempt::where('user_id', $student->id)
+                    ->whereHas('quiz', fn($q) => $q->where('course_id', $course->id))
+                    ->whereNotNull('score')->avg('score');
+
+                $ai = \App\Models\AiAnalysis::where('user_id', $student->id)
+                    ->where('course_id', $course->id)->latest()->first();
+
+                return [
+                    'student' => $student,
+                    'percent' => $pct,
+                    'avg_quiz'=> $avgQ !== null ? round($avgQ, 1) : null,
+                    'ai'      => $ai,
+                ];
+            });
+
+            return [
+                'course'   => $course,
+                'students' => $students,
+            ];
+        })->filter(fn($c) => $c['students']->isNotEmpty())->values();
+
+        return view('teacher.report', compact('courseStats', 'totals', 'studentsByCourse'));
     }
 
     // ── STUDENT: Laporan progress belajar siswa sendiri ──

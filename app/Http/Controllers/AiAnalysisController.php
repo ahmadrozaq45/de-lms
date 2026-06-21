@@ -65,6 +65,7 @@ class AiAnalysisController extends Controller
 
     /**
      * Admin/Guru generate rekomendasi untuk siswa tertentu.
+     * Opsional: pilih provider AI spesifik (jika tidak diisi, pakai preferensi user / provider aktif global).
      * POST /api/ai/generate-for-student
      */
     public function generateForStudent(Request $request): JsonResponse
@@ -74,13 +75,28 @@ class AiAnalysisController extends Controller
         $request->validate([
             'student_id' => 'required|integer|exists:users,id',
             'course_id'  => 'required|integer|exists:courses,id',
+            'provider'   => 'nullable|string|in:anthropic,gemini,groq,openai',
         ]);
 
         $student = \App\Models\User::findOrFail($request->student_id);
         $course  = Course::findOrFail($request->course_id);
 
-        $analysis = $this->aiService->generateStudentRecommendation($student, $course);
+        $aiService = $request->filled('provider')
+            ? new AiService($request->provider)
+            : $this->aiService;
+
+        $analysis = $aiService->generateStudentRecommendation($student, $course);
 
         return response()->json($analysis, 201);
+    }
+
+    /**
+     * Daftar provider AI yang sudah diisi API key oleh admin.
+     * Dipakai untuk dropdown/preferensi pemilihan provider di UI guru/admin.
+     * GET /api/ai/providers
+     */
+    public function availableProviders(): JsonResponse
+    {
+        return response()->json(AiService::availableProviders());
     }
 }
