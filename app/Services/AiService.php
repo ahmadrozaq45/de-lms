@@ -14,14 +14,14 @@ class AiService
 
     private const ENDPOINTS = [
         'anthropic' => 'https://api.anthropic.com/v1/messages',
-        'gemini'    => 'https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent',
+        'gemini'    => 'https://generativelanguage.googleapis.com/v1/models/{model}:generateContent',
         'groq'      => 'https://api.groq.com/openai/v1/chat/completions',
         'openai'    => 'https://api.openai.com/v1/chat/completions',
     ];
 
     private const DEFAULT_MODELS = [
         'anthropic' => 'claude-sonnet-4-6',
-        'gemini'    => 'gemini-1.5-flash',
+        'gemini'    => 'gemini-2.0-flash',
         'groq'      => 'llama-3.1-8b-instant',
         'openai'    => 'gpt-4o-mini',
     ];
@@ -30,12 +30,12 @@ class AiService
     {
         $this->provider = \App\Models\Setting::get('ai_provider', 'anthropic');
 
-        // Baca API key dan model per provider
-        $this->apiKey = \App\Models\Setting::get("ai_api_key_{$this->provider}", '')
+        // Baca API key dan model dari setting global (tanpa suffix provider)
+        $this->apiKey = \App\Models\Setting::get('ai_api_key', '')
             ?: config("services.{$this->provider}.key", '');
 
-        $this->model = \App\Models\Setting::get("ai_model_{$this->provider}", '')
-            ?: self::DEFAULT_MODELS[$this->provider] ?? 'gemini-1.5-flash';
+        $this->model = \App\Models\Setting::get('ai_model', '')
+            ?: self::DEFAULT_MODELS[$this->provider] ?? 'llama-3.1-8b-instant';
     }
 
     // ── Public Methods ────────────────────────────────────────────────────────
