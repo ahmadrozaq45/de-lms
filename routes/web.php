@@ -131,6 +131,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
              ->name('assignments.show');
         Route::post('/assignments/{id}/submit',      [AssignmentController::class, 'submit'])
              ->name('assignments.submit');
+        Route::get('/materials/{id}/download',          [MaterialController::class, 'download'])
+             ->name('materials.download');
 
         // ── Quiz (Siswa) ─────────────────────────────────────────────────────
         // Halaman detail quiz (sebelum mulai)
