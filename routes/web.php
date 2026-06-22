@@ -133,6 +133,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
              ->name('assignments.submit');
         Route::get('/materials/{id}/download',          [MaterialController::class, 'download'])
              ->name('materials.download');
+        Route::post('/materials/{id}/complete',          [MaterialController::class, 'markComplete'])
+             ->name('materials.complete');
 
         // ── Quiz (Siswa) ─────────────────────────────────────────────────────
         // Halaman detail quiz (sebelum mulai)

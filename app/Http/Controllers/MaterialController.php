@@ -153,4 +153,27 @@ class MaterialController extends Controller
 
         return Storage::disk('public')->download($material->file_path, $filename);
     }
+    
+    public function markComplete(int $id)
+    {
+        $material = Material::findOrFail($id);
+
+        // Cek apakah siswa sudah enroll di kelas tempat materi ini berada
+        $isEnrolled = CourseEnrollment::where('user_id', Auth::id())
+            ->where('course_id', $material->module->course_id)
+            ->exists();
+
+        if (!$isEnrolled) {
+            return redirect()->route('student.courses.show', $material->module->course_id)
+                             ->with('error', 'Kamu harus daftar kelas ini dulu sebelum bisa membaca materinya!');
+        }
+
+        // Tandai materi sebagai selesai untuk siswa ini
+        $materialProgress = \App\Models\MaterialProgress::updateOrCreate(
+            ['user_id' => Auth::id(), 'material_id' => $id],
+            ['is_completed' => true]
+        );
+
+        return redirect()->back()->with('success', 'Materi berhasil ditandai selesai!');
+    }
 }

@@ -48,9 +48,12 @@
 
                 <div class="mt-12 pt-8 border-t border-gray-100 flex justify-between items-center">
                     <span class="text-sm text-gray-500">Pastikan kamu sudah memahami materi ini.</span>
-                    <button class="px-8 py-3 bg-blue-600 text-white rounded-full font-bold hover:bg-blue-700 transition shadow-lg">
-                        Tandai Selesai & Lanjut
-                    </button>
+                    <form action="{{ route('student.materials.complete', $material->id) }}" method="POST" class="m-0">
+                        @csrf
+                        <button type="submit" class="px-8 py-3 bg-blue-600 text-white rounded-full font-bold hover:bg-blue-700 transition shadow-lg cursor-pointer">
+                            Tandai Selesai & Lanjut
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>
