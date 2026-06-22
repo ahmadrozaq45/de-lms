@@ -65,7 +65,6 @@ DE-LMS adalah platform Learning Management System (LMS) yang dirancang untuk men
 | **Siswa** | Ringkasan course diikuti, average progress & skor quiz, progress bar per course |
 
 ### 🤖 AI Recommendation
-- **Onboarding** — Saat registrasi, user memilih preferensi awal (Programming, UI/UX, Data Science, dll.)
 - **Analisis Tugas** — Penilaian manual oleh guru atau dibantu AI
 - **Analisis Kuis** — AI memberikan insight singkat area yang perlu ditingkatkan
 - **Rekomendasi** — AI merekomendasikan materi berikutnya, topik belajar, atau course relevan berdasarkan progress dan quiz
