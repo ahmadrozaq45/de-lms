@@ -51,7 +51,7 @@
                     <form action="{{ route('student.materials.complete', $material->id) }}" method="POST" class="m-0">
                         @csrf
                         <button type="submit" class="px-8 py-3 bg-blue-600 text-white rounded-full font-bold hover:bg-blue-700 transition shadow-lg cursor-pointer">
-                            Tandai Selesai & Lanjut
+                            Tandai Selesai
                         </button>
                     </form>
                 </div>
