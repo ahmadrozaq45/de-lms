@@ -49,9 +49,9 @@
                     </div>
                     
                     <div style="display:flex; align-items:center; gap:12px; margin-left:auto;">
-                        <span style="font-weight:600;">Progress: <strong style="color:#3b5bdb;">65%</strong></span>
+                        <span style="font-weight:600;">Progress: <strong style="color:#3b5bdb;">{{ $progressPercentage ?? 0 }}%</strong></span>
                         <div style="width:120px; height:8px; background:#e2e8f0; border-radius:10px; overflow:hidden;">
-                            <div style="width:65%; height:100%; background:#3b5bdb;"></div>
+                            <div style="width: {{ $progressPercentage ?? 0 }}%; height:100%; background:#3b5bdb;"></div>
                         </div>
                     </div>
                 </div>
